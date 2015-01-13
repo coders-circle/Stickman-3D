@@ -1,0 +1,98 @@
+#pragma once
+
+template<class T>
+inline void Swap(T &a, T &b)
+{
+    T t = a;
+    a = b;
+    b = t;
+}
+
+struct RGBColor
+{
+    RGBColor(uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0)
+    : r(red), g(green), b(blue)
+    {}
+    uint8_t r, g, b;
+};
+
+class vec3
+{
+public:
+    union
+    {
+        struct { float r, g, b, a; };
+        struct { float x, y, z, w; };
+    };
+    vec3() : x(0.0f), y(0.0f), z(0.0f) {}
+    vec3(float x, float y, float z) : x(x), y(y), z(z) {}
+    vec3(const RGBColor &color) : r(color.r), g(color.g), b(color.b) {}
+
+    vec3 operator+(const vec3 &other) const
+    {
+        return vec3(x+other.x, y+other.y, z+other.z);
+    }
+    vec3 operator-(const vec3 &other) const
+    {
+        return vec3(r-other.r, g-other.g, b-other.b);
+    }
+    vec3 operator*(float p) const
+    {
+        return vec3(r*p, g*p, b*p);
+    }
+  
+    float operator[] (size_t i) const
+    {
+        assert(i < 3);
+        return (&x)[i];
+    }
+
+    operator RGBColor() const
+    {
+        return RGBColor(r*255, g*255, b*255);
+    }
+};
+
+class vec4
+{
+public:
+    union
+    {
+        struct { float r, g, b, a; };
+        struct { float x, y, z, w; };
+    };
+    vec4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
+    vec4(float x, float y, float z, float w = 1.0f) : x(x), y(y), z(z), w(z) {}
+    vec4(const vec3& v) : x(v.x), y(v.y), z(v.z), w(1.0f) {}
+
+    vec4 operator+(const vec4 &other) const
+    {
+        return vec4(x+other.x, y+other.y, z+other.z, w+other.w);
+    }
+    vec4 operator-(const vec4 &other) const
+    {
+        return vec4(r-other.r, g-other.g, b-other.b, a-other.a);
+    }
+    vec4 operator*(float p) const
+    {
+        return vec4(r*p, g*p, b*p, a*p);
+    }
+   
+    float operator[] (size_t i) const
+    {
+        assert(i < 4);
+        return (&x)[i];
+    }
+
+    operator vec3() const
+    {
+        return vec3(r, g, b);
+    }
+};
+
+inline std::ostream& operator << (std::ostream &os, const vec3 &r) 
+{
+    os << "R: " << r.r << " G: " << r.g << " B: " << r.b;
+}
+
+
