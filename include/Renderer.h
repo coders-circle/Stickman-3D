@@ -1,5 +1,5 @@
 #pragma once
-#include "vector.h"
+#include "matrix.h"
 #include "Rasterizer.h"
 #include "Timer.h"
 
@@ -31,7 +31,7 @@ public:
     template<int N>
     void DrawTriangle(Point<N>* pt1, Point<N>* pt2, Point<N>* pt3, void (*f)(Point<N>&))
     {
-        Rasterizer::DrawTriangle(pt1, pt2, pt3, f); 
+        Rasterizer::DrawTriangle(pt1, pt2, pt3, f, m_width, m_height); 
     }
 
 private:

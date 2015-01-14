@@ -8,6 +8,22 @@ inline void Swap(T &a, T &b)
     b = t;
 }
 
+template<class T>
+inline T Max(const T &a, const T &b)
+{
+    if (a > b)
+        return a;
+    return b;
+}
+
+template<class T>
+inline T Min(const T &a, const T &b)
+{
+    if (a < b)
+        return a;
+    return b;
+}
+
 struct RGBColor
 {
     RGBColor(uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0)
@@ -39,6 +55,10 @@ public:
     vec3 operator*(float p) const
     {
         return vec3(r*p, g*p, b*p);
+    }
+    vec3 operator/(float p) const
+    {
+        return vec3(r/p, g/p, b/p);
     }
   
     float operator[] (size_t i) const
@@ -76,6 +96,10 @@ public:
     vec4 operator*(float p) const
     {
         return vec4(r*p, g*p, b*p, a*p);
+    }
+    vec4 operator/(float p) const
+    {
+        return vec4(r/p, g/p, b/p, a/p);
     }
    
     float operator[] (size_t i) const
