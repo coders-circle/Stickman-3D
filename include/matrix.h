@@ -185,3 +185,15 @@ public:
         );
     }
 };
+
+inline std::ostream& operator << (std::ostream &os, const mat4 &m)
+{
+    for (int i=0; i<4; ++i)
+    {
+        os << std::endl;
+        for (int j=0; j<4; ++j)
+            os << m.m[i][j] << "  ";
+    }
+    return os;
+}
+

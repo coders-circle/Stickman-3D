@@ -10,11 +10,11 @@ public:
         pos[0]=x;
         pos[1]=y;
     }
-    void FromVec4(const vec4& v)
+    void FromVec3(const vec3& v)
     {
-        pos[0] = v.x/v.w;
-        pos[1] = v.y/v.w;
-        d = v.z/v.w;
+        pos[0] = v.x;
+        pos[1] = v.y;
+        d = v.z;
     }
     int pos[2];
     float d;
@@ -34,7 +34,6 @@ public:
         if (Clip(point1) && Clip(point2) && Clip(point3))
             return;
 #undef Clip
-        
         
         Edge<N> edges[3];
         int num = 0;
@@ -58,6 +57,8 @@ public:
             if (edges[2].dy > edges[le].dy)
                 le = 2;
             int se1 = (le+1)%3, se2 = (le+2)%3;
+            if (edges[se2].y < edges[se1].y)
+                Swap(se1, se2);
             Pair<N> p1(&edges[le], &edges[se1]), p2(&edges[le], &edges[se2]);
             DrawSpans(p1, f, width, height);
             DrawSpans(p2, f, width, height);
@@ -81,7 +82,6 @@ public:
         {
             if (point1->pos[1] > point2->pos[1])
                 Swap(point1, point2);
-            
             int* pt1 = point1->pos;
             int* pt2 = point2->pos;
             tdx = 2*(pt2[0] - pt1[0]);
@@ -135,10 +135,10 @@ public:
     {
     public:
         Edge<N> *e1, *e2;
-        Pair(Edge<N> *e1, Edge<N>*e2)
-        : e1(e1), e2(e2)
+        Pair(Edge<N> *_e1, Edge<N>*_e2)
+        : e1(_e1), e2(_e2)
         {
-            if (e1->initial->pos[0] > e2->initial->pos[0] || e1->initial->pos[0] > e2->initial->pos[0])
+            if (e1->initial->pos[0] > e2->initial->pos[0] || e1->x2 > e2->x2)
                 Swap(e1, e2);
         }
     };
@@ -153,34 +153,34 @@ public:
         while (true)
         {
             int y = p.e1->y;
-            if (y > h)
+            if (y >= h)
                 return;
             if (y >= 0)
             {
                 int x1 = p.e1->x;
                 int x2 = p.e2->x;
-                if (x2 > w || x1 < 0)
-                    return;
-
-                x1 = Max(x1, 0);
-                x2 = Min(x2, w);
-
-                point.pos[1] = y;
-                xdiff = p.e2->x - p.e1->x;
-                ddiff = p.e2->d - p.e1->d;
-                for (int i=0; i<N; ++i)
-                    at_diffs[i] = p.e2->attrs[i] - p.e1->attrs[i];
-
-                for (point.pos[0] = x1; point.pos[0] <= x2; ++point.pos[0])
+                if (x1 < w && x2 >= 0)
                 {
-                    float factor = float(point.pos[0]-p.e1->x)/xdiff;
-                    point.d = p.e1->d + ddiff * factor;
-                    if (point.d < 0 || point.d > 1)
-                        continue;
+                    x1 = Max(x1, 0);
+                    x2 = Min(x2, w);
+
+                    point.pos[1] = y;
+                    xdiff = x2 - x1;
+                    ddiff = p.e2->d - p.e1->d;
                     for (int i=0; i<N; ++i)
-                        point.varying[i] = p.e1->attrs[i] + at_diffs[i] * factor;
-                    
-                    f(point);
+                        at_diffs[i] = p.e2->attrs[i] - p.e1->attrs[i];
+
+                    for (point.pos[0] = x1; point.pos[0] <= x2; ++point.pos[0])
+                    {
+                        float factor = float(point.pos[0]-x1)/xdiff;
+                        point.d = p.e1->d + ddiff * factor;
+                        if (point.d < 0 || point.d > 1)
+                            continue;
+                        for (int i=0; i<N; ++i)
+                            point.varying[i] = p.e1->attrs[i] + at_diffs[i] * factor;
+                        
+                        f(point);
+                    }
                 }
             }
 

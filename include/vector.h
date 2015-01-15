@@ -82,7 +82,7 @@ public:
         struct { float x, y, z, w; };
     };
     vec4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
-    vec4(float x, float y, float z, float w = 1.0f) : x(x), y(y), z(z), w(z) {}
+    vec4(float x, float y, float z, float w = 1.0f) : x(x), y(y), z(z), w(w) {}
     vec4(const vec3& v) : x(v.x), y(v.y), z(v.z), w(1.0f) {}
 
     vec4 operator+(const vec4 &other) const
@@ -101,6 +101,11 @@ public:
     {
         return vec4(r/p, g/p, b/p, a/p);
     }
+
+    vec3 ConvertToVec3() const
+    {
+        return vec3(x/w, y/w, z/w);
+    }
    
     float operator[] (size_t i) const
     {
@@ -116,8 +121,15 @@ public:
 
 inline std::ostream& operator << (std::ostream &os, const vec3 &r) 
 {
-    os << "R: " << r.r << " G: " << r.g << " B: " << r.b;
+    os << "X: " << r.r << " Y: " << r.g << " Z: " << r.b;
     return os;
 }
+
+inline std::ostream& operator << (std::ostream &os, const vec4 &r) 
+{
+    os << "X: " << r.r << " Y: " << r.g << " Z: " << r.b << " W: " << r.a;
+    return os;
+}
+
 
 

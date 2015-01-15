@@ -4,7 +4,7 @@
 void Renderer::Initialize(const char* title, int x, int y, int width, int height)
 {
     SDL_Init(SDL_INIT_EVERYTHING);
-    m_window = SDL_CreateWindow(title, x, y, width, height, SDL_WINDOW_SHOWN /*| SDL_WINDOW_FULLSCREEN_DESKTOP*/);
+    m_window = SDL_CreateWindow(title, x, y, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE /*| SDL_WINDOW_FULLSCREEN_DESKTOP*/);
     m_screen = SDL_GetWindowSurface(m_window);
 
     m_framebuffer = (uint32_t*)m_screen->pixels;
@@ -22,15 +22,29 @@ void Renderer::MainLoop()
         {
             if (e.type == SDL_QUIT)
                 quit = true;
-            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+            else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
                 quit = true;
+            else if (e.type == SDL_WINDOWEVENT)
+                switch(e.window.event)
+                {
+                case SDL_WINDOWEVENT_RESIZED:
+                    /*m_screen = SDL_GetWindowSurface(m_window);
+                    m_width = m_screen->w;
+                    m_height = m_screen->h;
+                    if (m_resize)
+                        m_resize(m_width, m_height);*/
+                    break;
+                }
         }
 
         Clear();
         SDL_LockSurface(m_screen);
         std::string title = "FPS: " + std::to_string(m_timer.GetFPS());
         SDL_SetWindowTitle(m_window, title.c_str());
-        m_timer.Update([this](double dt){ Update(dt); });
+        m_timer.Update([this](double dt){ 
+            if (m_update)
+                m_update(dt); 
+        });
         if (m_render) 
             m_render();
         SDL_UnlockSurface(m_screen);
