@@ -37,8 +37,8 @@ class vec3
 public:
     union
     {
-        struct { float r, g, b, a; };
-        struct { float x, y, z, w; };
+        struct { float r, g, b; };
+        struct { float x, y, z; };
     };
     vec3() : x(0.0f), y(0.0f), z(0.0f) {}
     vec3(float x, float y, float z) : x(x), y(y), z(z) {}
@@ -117,6 +117,7 @@ public:
 inline std::ostream& operator << (std::ostream &os, const vec3 &r) 
 {
     os << "R: " << r.r << " G: " << r.g << " B: " << r.b;
+    return os;
 }
 
 

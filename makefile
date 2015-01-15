@@ -19,7 +19,7 @@ LDLIBS := -lSDL2
 CXXFLAGS := -I $(INC_DIR) -std=c++11 -MMD $(CXXLIBS) -O3
 LDFLAGS := --std=c++11 $(LDLIBS)
 
-## Build client and server applications
+## Build the application
 all: bin/stickman3d
 
 $(BIN_DIR)/stickman3d: $(OBJ_FILES) | $(BIN_DIR)
@@ -34,7 +34,7 @@ $(BIN_DIR):
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
 	
-## Clean up everything and make necessary directories
+## Clean up everything
 clean:
 	rm -rf obj
 	rm -rf bin

@@ -10,6 +10,12 @@ public:
         pos[0]=x;
         pos[1]=y;
     }
+    void FromVec4(const vec4& v)
+    {
+        pos[0] = v.x/v.w;
+        pos[1] = v.y/v.w;
+        d = v.z/v.w;
+    }
     int pos[2];
     float d;
     vec4 varying[N];

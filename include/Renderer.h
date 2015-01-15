@@ -3,10 +3,11 @@
 #include "Rasterizer.h"
 #include "Timer.h"
 
+
 class Renderer
 {
 public:
-    Renderer() : m_timer(200.0) {}
+    Renderer() : m_timer(/*60.0*/300.0) {}
     void Initialize(const char* title, int x, int y, int width, int height);
     void MainLoop();
     void CleanUp();
@@ -29,9 +30,35 @@ public:
     void SetClearColor(RGBColor clearColor) { m_clearColor = clearColor; }
 
     template<int N>
-    void DrawTriangle(Point<N>* pt1, Point<N>* pt2, Point<N>* pt3, void (*f)(Point<N>&))
+    void DrawTriangle(Point<N> &pt1, Point<N> &pt2, Point<N> &pt3, void (*f)(Point<N>&))
     {
-        Rasterizer::DrawTriangle(pt1, pt2, pt3, f, m_width, m_height); 
+        Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, f, m_width, m_height); 
+    }
+
+    template<int N, class... Args, class... Args1>
+    void DrawTriangle(vec4(*f)(vec4[], Args...), void(*f1)(Point<N>&), Args1*... args)
+    {
+        Point<N> pt1, pt2, pt3;
+        vec4 v1, v2, v3;
+        // Vertex Shader...
+        v1 = f(pt1.varying, args[0]...);
+        v2 = f(pt2.varying, args[1]...);
+        v3 = f(pt3.varying, args[2]...);
+
+        // Normalized x,y units to pixel units
+        v1.x = (v1.x + 1.0f) / 2*m_width;
+        v1.y = (-v1.y + 1.0f) / 2*m_height; 
+        v2.x = (v2.x + 1.0f) / 2*m_width;
+        v2.y = (-v2.y + 1.0f) / 2*m_height; 
+        v3.x = (v3.x + 1.0f) / 2*m_width;
+        v3.y = (-v3.y + 1.0f) / 2*m_height;
+        
+        // Rasterization which also performs clipping
+        // and calls fragment shader for rendered pixels
+        pt1.FromVec4(v1);
+        pt2.FromVec4(v2);
+        pt3.FromVec4(v3);
+        DrawTriangle(pt1, pt2, pt3, f1);
     }
 
 private:
