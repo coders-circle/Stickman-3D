@@ -36,6 +36,11 @@ public:
         return v[n];
     }
 
+    const vec3& operator[] (int n) const
+    {
+        return v[n];
+    }
+
     mat3 operator+ (const mat3& m2) const
     {
         return mat3(
@@ -121,6 +126,11 @@ public:
     }
 
     vec4& operator[] (int n)
+    {
+        return v[n];
+    }
+
+    const vec4& operator[] (int n) const
     {
         return v[n];
     }

@@ -35,23 +35,41 @@ public:
         Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, f, m_width, m_height); 
     }
 
-    template<int N, class... Args, class... Args1>
-    void DrawTriangle(vec4(*f)(vec4[], Args...), void(*f1)(Point<N>&), Args1*... args)
+    template<int N, class Args>
+    void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, uint16_t* indexBuffer, size_t numTriangles)
+    {
+        for (size_t i=0; i<numTriangles; ++i)
+            DrawTriangle(vertexShader, fragmentShader, 
+                        vertexBuffer[indexBuffer[i*3]], vertexBuffer[indexBuffer[i*3+1]], vertexBuffer[indexBuffer[i*3+2]]);
+    }
+
+    template<int N, class Args>
+    void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, size_t numTriangles)
+    {
+        for (size_t i=0; i<numTriangles; ++i)
+            DrawTriangle(vertexShader, fragmentShader, vertexBuffer[i*3], vertexBuffer[i*3+1], vertexBuffer[i*3+2]);
+    }
+
+    template<int N, class Args>
+    void DrawTriangle(vec4(*f)(vec4[], const Args&), void(*f1)(Point<N>&), Args &arg1, Args& arg2, Args& arg3)
     {
         Point<N> pt1, pt2, pt3;
         vec3 v1, v2, v3;
         // Vertex Shader...
-        v1 = f(pt1.varying, args[0]...).ConvertToVec3();
-        v2 = f(pt2.varying, args[1]...).ConvertToVec3();
-        v3 = f(pt3.varying, args[2]...).ConvertToVec3();
+        v1 = f(pt1.varying, arg1).ConvertToVec3();
+        v2 = f(pt2.varying, arg2).ConvertToVec3();
+        v3 = f(pt3.varying, arg3).ConvertToVec3();
 
-        // Normalized x,y units to pixel units
+        // Normalized x,y units to pixel units and depth (-1,1) to (0,1)
         v1.x = (v1.x + 1.0f) / 2*m_width;
         v1.y = (-v1.y + 1.0f) / 2*m_height; 
+        v1.z = (v1.z + 1.0f) / 2.0f;
         v2.x = (v2.x + 1.0f) / 2*m_width;
         v2.y = (-v2.y + 1.0f) / 2*m_height; 
+        v2.z = (v2.z + 1.0f) / 2.0f;
         v3.x = (v3.x + 1.0f) / 2*m_width;
         v3.y = (-v3.y + 1.0f) / 2*m_height;
+        v3.z = (v3.z + 1.0f) / 2.0f;
 
         //std::cout << v1 << "\t" << v2 << "\t" << v3 << std::endl;
         

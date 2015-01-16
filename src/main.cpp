@@ -11,22 +11,42 @@ void FragmentShader(ClrPoint& point)
     g_renderer.PutPixel(point.pos[0], point.pos[1], vec3(point.varying[0]));
 }
 
-float t=0.0f;
-mat4 trans, persp;
-vec4 VertexShader(vec4 varying[], const vec3& v, const vec3& c)
+struct Vertex
 {
-    vec4 p = trans * vec4(v);
-    varying[0] = c;
+    vec3 v;
+    vec3 c;
+};
+
+mat4 transform, persp;
+vec4 VertexShader(vec4 varying[], const Vertex& vertex)
+{
+    vec4 p = transform * vec4(vertex.v);
+    varying[0] = vertex.c;
     return p;
 }
 
-vec3 vs[] = { vec3(0, 0.5f, 0), vec3(-0.5f, -0.5f, 0), vec3(0.5f, -0.5f, 0) };
-vec3 cs[] = { vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f) };
+// Vertex Buffer
+Vertex vertices[] = 
+{
+    { vec3(0, 0.5f, 0), vec3(1, 0, 0) },
+    { vec3(-0.5f, -0.5f, 0), vec3(0, 1, 0) },
+    { vec3(0.5f, -0.5f, 0), vec3(0, 0, 1) },
+    { vec3(1.0f, 0.5f, 0), vec3(1, 0, 1) },
+};
 
+// Index Buffer
+uint16_t indices[] = 
+{
+    0, 1, 2,
+    2, 0, 3
+};
+
+
+float angle=0.0f;
 void Render()
 {
-    trans = persp * Translate(vec3(0,0, -1.0f)) * RotateY(t);
-    g_renderer.DrawTriangle(&VertexShader, &FragmentShader, vs, cs);
+    transform = persp * Translate(vec3(0,0, -4.0f)) * RotateY(angle);
+    g_renderer.DrawTriangles(&VertexShader, &FragmentShader, vertices, indices, 2);
 }
 
 void Resize(int width, int height)
@@ -36,7 +56,7 @@ void Resize(int width, int height)
 
 void Update(double dt)
 {
-    t += dt;
+    angle += dt;
 }
 
 int main()

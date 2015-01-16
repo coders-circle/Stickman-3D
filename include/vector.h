@@ -61,11 +61,16 @@ public:
         return vec3(r/p, g/p, b/p);
     }
   
-    float operator[] (size_t i) const
+    float& operator[] (size_t i)
     {
-        assert(i < 3);
         return (&x)[i];
     }
+
+    float operator[] (size_t i) const
+    {
+        return (&x)[i];
+    }
+
 
     operator RGBColor() const
     {
@@ -107,9 +112,13 @@ public:
         return vec3(x/w, y/w, z/w);
     }
    
+    float& operator[] (size_t i)
+    {
+        return (&x)[i];
+    }
+
     float operator[] (size_t i) const
     {
-        assert(i < 4);
         return (&x)[i];
     }
 
