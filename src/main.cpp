@@ -28,25 +28,33 @@ vec4 VertexShader(vec4 varying[], const Vertex& vertex)
 // Vertex Buffer
 Vertex vertices[] = 
 {
-    { vec3(0, 0.5f, 0), vec3(1, 0, 0) },
-    { vec3(-0.5f, -0.5f, 0), vec3(0, 1, 0) },
-    { vec3(0.5f, -0.5f, 0), vec3(0, 0, 1) },
-    { vec3(1.0f, 0.5f, 0), vec3(1, 0, 1) },
+    { vec3(-0.5f,  0.5f,  0.5f), vec3(1, 0, 0) },
+    { vec3( 0.5f,  0.5f,  0.5f), vec3(0, 1, 0) },
+    { vec3(-0.5f, -0.5f,  0.5f), vec3(0, 0, 1) },
+    { vec3( 0.5f, -0.5f,  0.5f), vec3(1, 1, 0) },
+    { vec3(-0.5f,  0.5f, -0.5f), vec3(1, 0, 1) },
+    { vec3( 0.5f,  0.5f, -0.5f), vec3(0, 1, 1) },
+    { vec3(-0.5f, -0.5f, -0.5f), vec3(0.5f, 1, 0.5f) },
+    { vec3( 0.5f, -0.5f, -0.5f), vec3(0.5f, 0.5f, 0.2f) },
 };
 
 // Index Buffer
 uint16_t indices[] = 
 {
-    0, 1, 2,
-    2, 0, 3
+    0, 1, 3, 0, 3, 2,
+    4, 0, 2, 4, 2, 6,
+    5, 4, 6, 5, 6, 7,
+    1, 5, 7, 1, 7, 3,
+    0, 4, 5, 0, 5, 1,
+    3, 7, 6, 3, 6, 2,8
 };
 
 
-float angle=0.0f;
+float angle=-45.0f*3.1415/180.0f;
 void Render()
 {
-    transform = persp * Translate(vec3(0,0, -4.0f)) * RotateY(angle);
-    g_renderer.DrawTriangles(&VertexShader, &FragmentShader, vertices, indices, 2);
+    transform = persp * Translate(vec3(0,0, -3.0f)) * RotateY(angle);
+    g_renderer.DrawTriangles(&VertexShader, &FragmentShader, vertices, 8, indices, 12);
 }
 
 void Resize(int width, int height)

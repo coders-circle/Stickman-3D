@@ -25,7 +25,7 @@ class Rasterizer
 {
 public:
     template<int N>
-    static void DrawTriangle(Point<N>* point1, Point<N>* point2, Point<N>* point3, void(*f)(Point<N>&), int width, int height)
+    static void DrawTriangle(Point<N>* point1, Point<N>* point2, Point<N>* point3, void(*f)(Point<N>&), int width, int height, float* depthBuffer)
     {
         int *pt1 = point1->pos,
             *pt2 = point2->pos,
@@ -34,7 +34,6 @@ public:
         if (Clip(point1) && Clip(point2) && Clip(point3))
             return;
 #undef Clip
-        
         Edge<N> edges[3];
         int num = 0;
         if (pt1[1] != pt2[1])
@@ -47,7 +46,7 @@ public:
         if (num == 2)
         {
             Pair<N> pair(&edges[0], &edges[1]);
-            DrawSpans(pair, f, width, height);
+            DrawSpans(pair, f, width, height, depthBuffer);
         }
         else
         {
@@ -60,8 +59,8 @@ public:
             if (edges[se2].y < edges[se1].y)
                 Swap(se1, se2);
             Pair<N> p1(&edges[le], &edges[se1]), p2(&edges[le], &edges[se2]);
-            DrawSpans(p1, f, width, height);
-            DrawSpans(p2, f, width, height);
+            DrawSpans(p1, f, width, height, depthBuffer);
+            DrawSpans(p2, f, width, height, depthBuffer);
         }
     }
 
@@ -138,13 +137,23 @@ public:
         Pair(Edge<N> *_e1, Edge<N>*_e2)
         : e1(_e1), e2(_e2)
         {
-            if (e1->initial->pos[0] > e2->initial->pos[0] || e1->x2 > e2->x2)
+              if (e1->initial->pos[0] > e2->initial->pos[0])
                 Swap(e1, e2);
+              
+        }
+
+        bool NextY()
+        {    
+            if (!e1->NextY() || !e2->NextY())
+                return false;
+            if (e1->x > e2->x)
+                Swap(e1, e2);
+            return true;
         }
     };
     
     template<int N>
-    static void DrawSpans(Pair<N> &p, void(*f)(Point<N>&), int w, int h)
+    static void DrawSpans(Pair<N> &p, void(*f)(Point<N>&), int w, int h, float* depthBuffer)
     {
         vec4 at_diffs[N];
         Point<N> point;
@@ -174,8 +183,12 @@ public:
                     {
                         float factor = float(point.pos[0]-x1)/xdiff;
                         point.d = p.e1->d + ddiff * factor;
-                        if (point.d < 0 || point.d > 1)
+                        if (point.d < 0)
                             continue;
+                        float& depth = depthBuffer[point.pos[1]*w+point.pos[0]];
+                        if (depth < point.d)
+                            continue;
+                        depth = point.d;
                         for (int i=0; i<N; ++i)
                             point.varying[i] = p.e1->attrs[i] + at_diffs[i] * factor;
                         
@@ -184,9 +197,7 @@ public:
                 }
             }
 
-            if (!p.e1->NextY())
-                return;
-            if (!p.e2->NextY())
+           if (!p.NextY())
                 return;
         }
     }

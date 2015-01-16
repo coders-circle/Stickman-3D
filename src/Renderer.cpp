@@ -1,6 +1,16 @@
 #include <common.h>
 #include <Renderer.h>
 
+Renderer::Renderer() : m_timer(/*60.0*/300.0), m_depthBuffer(NULL) 
+{}
+
+Renderer::~Renderer()
+{
+    if (m_depthBuffer)
+        delete[] m_depthBuffer;
+}
+
+
 void Renderer::Initialize(const char* title, int x, int y, int width, int height)
 {
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -10,6 +20,8 @@ void Renderer::Initialize(const char* title, int x, int y, int width, int height
     m_framebuffer = (uint32_t*)m_screen->pixels;
     m_width = m_screen->w;
     m_height = m_screen->h;
+
+    m_depthBuffer = new float[m_width*m_height];
 }
 
 void Renderer::MainLoop()
@@ -47,6 +59,12 @@ void Renderer::CleanUp()
     SDL_FreeSurface(m_screen);
     SDL_DestroyWindow(m_window);
     SDL_Quit();
+
+    if (m_depthBuffer)
+    {
+        delete[] m_depthBuffer;
+        m_depthBuffer = NULL;
+    }
 }
 
  

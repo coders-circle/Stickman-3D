@@ -7,7 +7,9 @@
 class Renderer
 {
 public:
-    Renderer() : m_timer(/*60.0*/300.0) {}
+    Renderer();
+    ~Renderer();
+
     void Initialize(const char* title, int x, int y, int width, int height);
     void MainLoop();
     void CleanUp();
@@ -32,24 +34,41 @@ public:
     template<int N>
     void DrawTriangle(Point<N> &pt1, Point<N> &pt2, Point<N> &pt3, void (*f)(Point<N>&))
     {
-        Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, f, m_width, m_height); 
+        Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, f, m_width, m_height, m_depthBuffer); 
     }
 
     template<int N, class Args>
-    void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, uint16_t* indexBuffer, size_t numTriangles)
+    void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, size_t numVertices, uint16_t* indexBuffer, size_t numTriangles)
     {
+        Point<N>* points = new Point<N>[numVertices];
+        ProcessVertices(points, vertexShader, vertexBuffer, numVertices);
         for (size_t i=0; i<numTriangles; ++i)
-            DrawTriangle(vertexShader, fragmentShader, 
-                        vertexBuffer[indexBuffer[i*3]], vertexBuffer[indexBuffer[i*3+1]], vertexBuffer[indexBuffer[i*3+2]]);
+            DrawTriangle(points[indexBuffer[i*3]], points[indexBuffer[i*3+1]], points[indexBuffer[i*3+2]], fragmentShader);
+        delete[] points;
     }
-
+/*
     template<int N, class Args>
     void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, size_t numTriangles)
     {
         for (size_t i=0; i<numTriangles; ++i)
             DrawTriangle(vertexShader, fragmentShader, vertexBuffer[i*3], vertexBuffer[i*3+1], vertexBuffer[i*3+2]);
     }
+*/
+    template<int N, class Args>
+    void ProcessVertices(Point<N>*points, vec4(*f)(vec4[], const Args&), Args* args, size_t numVertices)
+    {
+        vec3 v;
+        for (size_t i=0; i<numVertices; ++i)
+        {
+            v = f(points[i].varying, args[i]).ConvertToVec3();
+            v.x = (v.x + 1.0f) / 2*m_width;
+            v.y = (-v.y + 1.0f) / 2*m_height;
+            v.z = (v.z + 1.0f) / 2.0f;
+            points[i].FromVec3(v);
+        }
+    }
 
+/*
     template<int N, class Args>
     void DrawTriangle(vec4(*f)(vec4[], const Args&), void(*f1)(Point<N>&), Args &arg1, Args& arg2, Args& arg3)
     {
@@ -80,7 +99,7 @@ public:
         pt3.FromVec3(v3);
         DrawTriangle(pt1, pt2, pt3, f1);
     }
-
+*/
     int GetWidth() { return m_width; }
     int GetHeight() { return m_height; }
 
@@ -91,12 +110,16 @@ private:
     
     SDL_Window* m_window;
     SDL_Surface* m_screen;
+    float* m_depthBuffer;
 
     void Clear()
     {
         for (int i = 0; i < m_width; ++i)
         for (int j = 0; j < m_height; ++j)
+        {
             PutPixelUnsafe(i, j, m_clearColor);
+            m_depthBuffer[j*m_height+i] = 1.0f;
+        }
     }
 
     std::function<void()> m_render;
