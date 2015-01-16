@@ -8,53 +8,82 @@ typedef Point<1> ClrPoint;          // Point<N> for point with N-varying attribu
 
 void FragmentShader(ClrPoint& point)
 {
-    g_renderer.PutPixel(point.pos[0], point.pos[1], vec3(point.varying[0]));
+    vec3 n = point.varying[0];
+    vec3 c(1.0f, 1.0f, 1.0f);
+    n.Normalize();
+    vec3 dir(-1,0,0);
+    float intensity = Max(n.x*dir.x + n.y*dir.y + n.z*dir.z, 0.0f);
+    c = c*intensity;
+    g_renderer.PutPixel(point.pos[0], point.pos[1], c);
 }
 
 struct Vertex
 {
     vec3 v;
-    vec3 c;
+    vec3 n;
 };
 
-mat4 transform, persp;
+mat4 transform, model, persp;
 vec4 VertexShader(vec4 varying[], const Vertex& vertex)
 {
     vec4 p = transform * vec4(vertex.v);
-    varying[0] = vertex.c;
+    varying[0] = model * vertex.n;
     return p;
 }
 
 // Vertex Buffer
 Vertex vertices[] = 
 {
-    { vec3(-0.5f,  0.5f,  0.5f), vec3(1, 0, 0) },
-    { vec3( 0.5f,  0.5f,  0.5f), vec3(0, 1, 0) },
+    // FRONT
+    { vec3(-0.5f,  0.5f,  0.5f), vec3(0, 0, 1) },
+    { vec3( 0.5f,  0.5f,  0.5f), vec3(0, 0, 1) },
     { vec3(-0.5f, -0.5f,  0.5f), vec3(0, 0, 1) },
-    { vec3( 0.5f, -0.5f,  0.5f), vec3(1, 1, 0) },
-    { vec3(-0.5f,  0.5f, -0.5f), vec3(1, 0, 1) },
-    { vec3( 0.5f,  0.5f, -0.5f), vec3(0, 1, 1) },
-    { vec3(-0.5f, -0.5f, -0.5f), vec3(0.5f, 1, 0.5f) },
-    { vec3( 0.5f, -0.5f, -0.5f), vec3(0.5f, 0.5f, 0.2f) },
+    { vec3( 0.5f, -0.5f,  0.5f), vec3(0, 0, 1) },
+    // RIGHT
+    { vec3( 0.5f,  0.5f, -0.5f), vec3(1, 0, 0) },
+    { vec3( 0.5f,  0.5f,  0.5f), vec3(1, 0, 0) },
+    { vec3( 0.5f, -0.5f, -0.5f), vec3(1, 0, 0) },
+    { vec3( 0.5f, -0.5f,  0.5f), vec3(1, 0, 0) },
+    // LEFT
+    { vec3(-0.5f,  0.5f,  0.5f), vec3(-1, 0, 0) },
+    { vec3(-0.5f,  0.5f, -0.5f), vec3(-1, 0, 0) },
+    { vec3(-0.5f, -0.5f,  0.5f), vec3(-1, 0, 0) },
+    { vec3(-0.5f, -0.5f, -0.5f), vec3(-1, 0, 0) },
+    // TOP
+    { vec3(-0.5f,  0.5f, -0.5f), vec3(0, 1, 0) },
+    { vec3( 0.5f,  0.5f, -0.5f), vec3(0, 1, 0) },
+    { vec3(-0.5f,  0.5f,  0.5f), vec3(0, 1, 0) },
+    { vec3( 0.5f,  0.5f,  0.5f), vec3(0, 1, 0) },
+    // BOTTOM
+    { vec3(-0.5f, -0.5f,  0.5f), vec3(0, -1, 0) },
+    { vec3( 0.5f, -0.5f,  0.5f), vec3(0, -1, 0) },
+    { vec3(-0.5f, -0.5f, -0.5f), vec3(0, -1, 0) },
+    { vec3( 0.5f, -0.5f, -0.5f), vec3(0, -1, 0) },
+    // BACK
+    { vec3( 0.5f,  0.5f, -0.5f), vec3(0, 0, -1) },
+    { vec3(-0.5f,  0.5f, -0.5f), vec3(0, 0, -1) },
+    { vec3( 0.5f, -0.5f, -0.5f), vec3(0, 0, -1) },
+    { vec3(-0.5f, -0.5f, -0.5f), vec3(0, 0, -1) },
 };
 
 // Index Buffer
 uint16_t indices[] = 
 {
     0, 1, 3, 0, 3, 2,
-    4, 0, 2, 4, 2, 6,
-    5, 4, 6, 5, 6, 7,
-    1, 5, 7, 1, 7, 3,
-    0, 4, 5, 0, 5, 1,
-    3, 7, 6, 3, 6, 2,8
+    4, 5, 7, 4, 7, 6,
+    8, 9, 11, 8, 11, 10,
+    12, 13, 15, 12, 15, 14,
+    16, 17, 19, 16, 19, 18,
+    20, 21, 23, 20, 23, 22
 };
 
 
 float angle=-45.0f*3.1415/180.0f;
 void Render()
 {
-    transform = persp * Translate(vec3(0,0, -3.0f)) * RotateY(angle);
-    g_renderer.DrawTriangles(&VertexShader, &FragmentShader, vertices, 8, indices, 12);
+    model = Translate(vec3(0,0,-3))*RotateY(angle);
+    transform = persp * model;
+    g_renderer.DrawTriangles(&VertexShader, &FragmentShader, vertices, 24, indices, 12);
 }
 
 void Resize(int width, int height)

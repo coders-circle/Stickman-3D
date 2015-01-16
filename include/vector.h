@@ -71,6 +71,18 @@ public:
         return (&x)[i];
     }
 
+    float Length()
+    {
+        return sqrtf(x*x+y*y+z*z);
+    }
+    void Normalize()
+    {
+        float l = Length();
+        x /= l;
+        y /= l;
+        z /= l;
+    }
+
 
     operator RGBColor() const
     {
@@ -126,6 +138,21 @@ public:
     {
         return vec3(r, g, b);
     }
+
+    float Length()
+    {
+        return sqrtf(x*x+y*y+z*z+w*w);
+    }
+
+    void Normalize()
+    {
+        float l = Length();
+        x /= l;
+        y /= l;
+        z /= l;
+        w /= l;
+    }
+
 };
 
 inline std::ostream& operator << (std::ostream &os, const vec3 &r) 
