@@ -47,6 +47,7 @@ void Renderer::MainLoop()
             if (m_update)
                 m_update(dt); 
         });
+
         if (m_width > 0 && m_height > 0 && m_render) 
             m_render();
         SDL_UnlockSurface(m_screen);

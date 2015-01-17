@@ -1,5 +1,7 @@
 #pragma once
 
+// Each point denotes a window-space pixel position,
+// depth of the pixel and varying attributes for the pixel
 template<int N>
 class Point
 {
@@ -30,10 +32,10 @@ public:
         int *pt1 = point1->pos,
             *pt2 = point2->pos,
             *pt3 = point3->pos;
-#define Clip(x) (x->pos[0] < 0 || x->pos[0] > width || x->pos[1] < 0 || x->pos[1] > height || x->d < 0 || x->d > 1)
-        if (Clip(point1) && Clip(point2) && Clip(point3))
-            return;
-#undef Clip
+    
+        // Create edges out of the points
+        // But do not create horizontal edges
+        // Edge stores two points sorted by y
         Edge<N> edges[3];
         int num = 0;
         if (pt1[1] != pt2[1])
@@ -42,22 +44,29 @@ public:
             edges[num++].Initialize(point2, point3);
         if (pt3[1] != pt1[1])
             edges[num++].Initialize(point3, point1);
-        
+            
+        // If only two edges are created (that is 3rd is horizontal)
+        // draw spans from for the pair
         if (num == 2)
         {
+            // Pair stores two edges sorted by x
             Pair<N> pair(&edges[0], &edges[1]);
             DrawSpans(pair, f, width, height, depthBuffer);
         }
-        else
+        // If 3 edges were created, find the longest edge and draw spans for two pairs
+        // each pair containing the longest edge and a sort edge
+        else if (num == 3)
         {
             int le = 0;
             if (edges[1].dy > edges[0].dy)
                 le = 1;
             if (edges[2].dy > edges[le].dy)
                 le = 2;
+
             int se1 = (le+1)%3, se2 = (le+2)%3;
-            if (edges[se2].y < edges[se1].y)
-                Swap(se1, se2);
+            if (edges[se2].y < edges[se1].y)        // Make sure short edge with less y is drawn first
+                Swap(se1, se2);                     //  to ensure that the longest edge has its y scanned from top to bottom and not from middle
+
             Pair<N> p1(&edges[le], &edges[se1]), p2(&edges[le], &edges[se2]);
             DrawSpans(p1, f, width, height, depthBuffer);
             DrawSpans(p2, f, width, height, depthBuffer);
@@ -65,6 +74,8 @@ public:
     }
 
 private:
+
+    // Edge stores a pair of points, sorted by y-coordinate
     template<int N>
     class Edge
     {
@@ -108,7 +119,10 @@ public:
                 attrs[i] = point1->varying[i];
             }
         }
-    
+        
+        // Find x-coordinate for next y-coordinate
+        // Also update the varying attributes and depth
+        //  by interpolating along the edge
         bool NextY()
         {
             ++y;
@@ -128,7 +142,8 @@ public:
             return true;
         }
     };
-    
+        
+    // Pair stores a pair of edges sorted by x-coordinate 
     template<int N>
     class Pair
     {
@@ -141,7 +156,8 @@ public:
                 Swap(e1, e2);
               
         }
-
+        
+        // Find x-coordinates for each edges for next y
         bool NextY()
         {    
             if (!e1->NextY() || !e2->NextY())
@@ -155,6 +171,14 @@ public:
     template<int N>
     static void DrawSpans(Pair<N> &p, void(*f)(Point<N>&), int w, int h, float* depthBuffer)
     {
+        // To draw the spans
+        //  start at first y of the pair of edges (which are equal at the start)
+        //  get x's of each edges
+        //  interpolate attributes and depth
+        //  call fragmentShader function to draw the point
+        //  find next Y
+        // Do this till y's of edges exhaust or y is beyond the window height
+
         vec4 at_diffs[N];
         Point<N> point;
         float xdiff;
@@ -162,15 +186,15 @@ public:
         while (true)
         {
             int y = p.e1->y;
-            if (y >= h)
+            if (y >= h)         // Clipping when y >= height
                 return;
-            if (y >= 0)
+            if (y >= 0)         // Clipping when y < 0
             {
                 int x1 = p.e1->x;
                 int x2 = p.e2->x;
-                if (x1 < w && x2 >= 0)
+                if (x1 < w && x2 >= 0)      // Clipping when x > width or x < 0
                 {
-                    x1 = Max(x1, 0);
+                    x1 = Max(x1, 0);        // Further clipping
                     x2 = Min(x2, w);
 
                     point.pos[1] = y;
@@ -179,19 +203,22 @@ public:
                     for (int i=0; i<N; ++i)
                         at_diffs[i] = p.e2->attrs[i] - p.e1->attrs[i];
 
+                    // for each point as we scan interpolate depth and attributes
                     for (point.pos[0] = x1; point.pos[0] <= x2; ++point.pos[0])
                     {
                         float factor = float(point.pos[0]-x1)/xdiff;
                         point.d = p.e1->d + ddiff * factor;
+                        // depth clipping (d < 0 and d > 1) Since depth buffer store 1 at max, d>1 is automatically tested
                         if (point.d < 0)
                             continue;
+                        // Depth test
                         float& depth = depthBuffer[point.pos[1]*w+point.pos[0]];
                         if (depth < point.d)
                             continue;
-                        depth = point.d;
+
                         for (int i=0; i<N; ++i)
                             point.varying[i] = p.e1->attrs[i] + at_diffs[i] * factor;
-                        
+                        depth = point.d;
                         f(point);
                     }
                 }
