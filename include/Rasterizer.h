@@ -198,28 +198,30 @@ public:
                     x2 = Min(x2, w);
 
                     point.pos[1] = y;
-                    xdiff = x2 - x1;
-                    ddiff = p.e2->d - p.e1->d;
-                    for (int i=0; i<N; ++i)
-                        at_diffs[i] = p.e2->attrs[i] - p.e1->attrs[i];
-
-                    // for each point as we scan interpolate depth and attributes
-                    for (point.pos[0] = x1; point.pos[0] <= x2; ++point.pos[0])
+                    xdiff = p.e2->x - p.e1->x;
                     {
-                        float factor = float(point.pos[0]-x1)/xdiff;
-                        point.d = p.e1->d + ddiff * factor;
-                        // depth clipping (d < 0 and d > 1) Since depth buffer store 1 at max, d>1 is automatically tested
-                        if (point.d < 0)
-                            continue;
-                        // Depth test
-                        float& depth = depthBuffer[point.pos[1]*w+point.pos[0]];
-                        if (depth < point.d)
-                            continue;
-
+                        ddiff = p.e2->d - p.e1->d;
                         for (int i=0; i<N; ++i)
-                            point.varying[i] = p.e1->attrs[i] + at_diffs[i] * factor;
-                        depth = point.d;
-                        f(point);
+                            at_diffs[i] = p.e2->attrs[i] - p.e1->attrs[i];
+
+                        // for each point as we scan interpolate depth and attributes
+                        for (point.pos[0] = x1; point.pos[0] <= x2; ++point.pos[0])
+                        {
+                            float factor = float(point.pos[0]-p.e1->x)/xdiff;
+                            point.d = p.e1->d + ddiff * factor;
+                            // depth clipping (d < 0 and d > 1) Since depth buffer store 1 at max, d>1 is automatically tested
+                            if (point.d < 0)
+                                continue;
+                            // Depth test
+                            float& depth = depthBuffer[point.pos[1]*w+point.pos[0]];
+                            if (depth < point.d)
+                                continue;
+
+                            for (int i=0; i<N; ++i)
+                                point.varying[i] = p.e1->attrs[i] + at_diffs[i] * factor;
+                            depth = point.d;
+                            f(point);
+                        }
                     }
                 }
             }

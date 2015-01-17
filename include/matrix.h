@@ -107,6 +107,13 @@ public:
         (*this)[2] = v3;
         (*this)[3] = v4;
     }
+    mat4(const mat3& mat)
+    {
+        (*this)[0] = vec4(mat.v[0], 0.0f);
+        (*this)[1] = vec4(mat.v[1], 0.0f);
+        (*this)[2] = vec4(mat.v[2], 0.0f);
+        (*this)[3] = vec4();
+    }
     mat4(float f = 1.0f)
     {
         (*this)[0] = vec4(f, 0.0f, 0.0f, 0.0f);
@@ -192,6 +199,15 @@ public:
             m[1][0]*f, m[1][1]*f, m[1][2]*f, m[1][3]*f,
             m[2][0]*f, m[2][1]*f, m[2][2]*f, m[2][3]*f,
             m[3][0]*f, m[3][1]*f, m[3][2]*f, m[3][3]*f
+        );
+    }
+
+    operator mat3() const
+    {
+        return mat3(
+            m[0][0], m[0][1], m[0][2],
+            m[1][0], m[1][1], m[1][2],
+            m[2][0], m[2][1], m[2][2]
         );
     }
 };

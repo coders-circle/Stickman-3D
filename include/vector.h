@@ -59,17 +59,22 @@ public:
     {
         return vec2(x/p, y/p);
     }
-  
+    vec2 operator -() const 
+    {
+        return vec2(-x, -y);
+    }
+    float dot(const vec2 &other) const
+    {
+        return x*other.x + y*other.y;
+    }
     float& operator[] (size_t i)
     {
         return (&x)[i];
     }
-
     float operator[] (size_t i) const
     {
         return (&x)[i];
     }
-
     float Length()
     {
         return sqrtf(x*x+y*y);
@@ -94,7 +99,7 @@ public:
     vec3() : x(0.0f), y(0.0f), z(0.0f) {}
     vec3(float x, float y, float z) : x(x), y(y), z(z) {}
     vec3(const RGBColor &color) : r(color.r/255.0f), g(color.g/255.0f), b(color.b/255.0f) {}
-    vec3(const vec2& v) : x(v.x), y(v.y), z(0.0f) {}
+    vec3(const vec2& v, float z=0.0f) : x(v.x), y(v.y), z(z) {}
 
     vec3 operator+(const vec3 &other) const
     {
@@ -104,6 +109,10 @@ public:
     {
         return vec3(r-other.r, g-other.g, b-other.b);
     }
+    float dot(const vec3 &other) const
+    {
+        return x*other.x + y*other.y + z*other.z;
+    }
     vec3 operator*(float p) const
     {
         return vec3(r*p, g*p, b*p);
@@ -112,17 +121,18 @@ public:
     {
         return vec3(r/p, g/p, b/p);
     }
-  
+    vec3 operator -() const 
+    {
+        return vec3(-x, -y, -z);
+    }
     float& operator[] (size_t i)
     {
         return (&x)[i];
     }
-
     float operator[] (size_t i) const
     {
         return (&x)[i];
     }
-
     float Length()
     {
         return sqrtf(x*x+y*y+z*z);
@@ -157,8 +167,8 @@ public:
     };
     vec4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
     vec4(float x, float y, float z, float w = 1.0f) : x(x), y(y), z(z), w(w) {}
-    vec4(const vec3& v) : x(v.x), y(v.y), z(v.z), w(1.0f) {}
-    vec4(const vec2& v) : x(v.x), y(v.y), z(0.0f), w(1.0f) {}
+    vec4(const vec3& v, float w=1.0f) : x(v.x), y(v.y), z(v.z), w(w) {}
+    vec4(const vec2& v, float z=0.0f, float w=1.0f) : x(v.x), y(v.y), z(z), w(w) {}
 
     vec4 operator+(const vec4 &other) const
     {
@@ -166,47 +176,48 @@ public:
     }
     vec4 operator-(const vec4 &other) const
     {
-        return vec4(r-other.r, g-other.g, b-other.b, a-other.a);
+        return vec4(x-other.x, y-other.y, z-other.z, w-other.w);
     }
     vec4 operator*(float p) const
     {
-        return vec4(r*p, g*p, b*p, a*p);
+        return vec4(x*p, y*p, z*p, w*p);
     }
     vec4 operator/(float p) const
     {
-        return vec4(r/p, g/p, b/p, a/p);
+        return vec4(x/p, y/p, z/p, w/p);
     }
-
+    float dot(const vec4 &other) const
+    {
+        return x*other.x + y*other.y + z*other.z + w*other.w;
+    }
+    vec4 operator -() const 
+    {
+        return vec4(-x, -y, -z, -w);
+    }
     vec3 ConvertToVec3() const
     {
         return vec3(x/w, y/w, z/w);
     }
-   
     float& operator[] (size_t i)
     {
         return (&x)[i];
     }
-
     float operator[] (size_t i) const
     {
         return (&x)[i];
     }
-
     operator vec3() const
     {
-        return vec3(r, g, b);
+        return vec3(x, y, z);
     }
-
     operator vec2() const
     {
         return vec2(x, y);
     }
-
     float Length()
     {
         return sqrtf(x*x+y*y+z*z+w*w);
     }
-
     void Normalize()
     {
         float l = Length();

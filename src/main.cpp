@@ -26,7 +26,7 @@ struct Vertex
 vec4 VertexShader(vec4 varying[], const Vertex& vertex)
 {
     vec4 p = transform * vec4(vertex.v);        // Transform the vertex by composite ModelViewProjection matrix
-    varying[0] = model * vertex.n;              // Transform the normal by model matrix
+    varying[0] = mat3(model) * vertex.n;              // Transform the normal by model matrix
     varying[1] = vertex.uv;
     return p;                                   // Return the position of the vertex in clip-space
 }
@@ -43,10 +43,11 @@ void FragmentShader(Point<2>& point)
     vec3 c = bmp.Sample(point.varying[1]);   // Get color by sampling the bitmap    
 
     // Perform a simple phong based lighting calculation for directional light
-    vec3 dir(1,0,-1);                   
-    float intensity = Max(n.x*dir.x + n.y*dir.y + n.z*dir.z, 0.0f);
-    c = c*intensity;
-
+    vec3 dir(-1,0,-1);                   
+    dir.Normalize();
+    float intensity = Min(Max(n.dot(-dir), 0.0f), 1.0f);
+    c = c*intensity;    // "Light" the color
+    
     g_renderer.PutPixel(point.pos[0], point.pos[1], c);     // Use the calculated color to plot the pixel
 }
 
