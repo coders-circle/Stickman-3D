@@ -1,8 +1,10 @@
 #include <common.h>
 #include <Renderer.h>
 #include <transform.h>
+#include <Bitmap.h>
 
 Renderer g_renderer;
+Bitmap bmp;
 // Transformations
 mat4 transform, model, persp;
 
@@ -11,6 +13,7 @@ struct Vertex
 {
     vec3 v;
     vec3 n;
+    vec2 uv;
 };
 
 
@@ -24,7 +27,7 @@ vec4 VertexShader(vec4 varying[], const Vertex& vertex)
 {
     vec4 p = transform * vec4(vertex.v);        // Transform the vertex by composite ModelViewProjection matrix
     varying[0] = model * vertex.n;              // Transform the normal by model matrix
-                                                //  the normal is passed to the rasterizer as the varying attribute
+    varying[1] = vertex.uv;
     return p;                                   // Return the position of the vertex in clip-space
 }
 
@@ -32,13 +35,15 @@ vec4 VertexShader(vec4 varying[], const Vertex& vertex)
 // This function is called for each pixel
 // The Point contains x,y position of the pixel,
 // the depth value and the interpolated varying attributes
-void FragmentShader(Point<1>& point)
+void FragmentShader(Point<2>& point)
 {
     vec3 n = point.varying[0];  // Take in the interpolated normal
     n.Normalize();              //  and normalize it
-    
-    vec3 c(1.0f, 1.0f, 1.0f);           // Perform a simple phong based lighting calculation for directional light
-    vec3 dir(-1,0,0);                   
+        
+    vec3 c = bmp.Sample(point.varying[1]);   // Get color by sampling the bitmap    
+
+    // Perform a simple phong based lighting calculation for directional light
+    vec3 dir(1,0,-1);                   
     float intensity = Max(n.x*dir.x + n.y*dir.y + n.z*dir.z, 0.0f);
     c = c*intensity;
 
@@ -49,35 +54,35 @@ void FragmentShader(Point<1>& point)
 Vertex vertices[] = 
 {
     // FRONT
-    { vec3(-0.5f,  0.5f,  0.5f), vec3(0, 0, 1) },
-    { vec3( 0.5f,  0.5f,  0.5f), vec3(0, 0, 1) },
-    { vec3(-0.5f, -0.5f,  0.5f), vec3(0, 0, 1) },
-    { vec3( 0.5f, -0.5f,  0.5f), vec3(0, 0, 1) },
-    // RIGHT
-    { vec3( 0.5f,  0.5f,  0.5f), vec3(1, 0, 0) },
-    { vec3( 0.5f,  0.5f, -0.5f), vec3(1, 0, 0) },
-    { vec3( 0.5f, -0.5f,  0.5f), vec3(1, 0, 0) },
-    { vec3( 0.5f, -0.5f, -0.5f), vec3(1, 0, 0) },
+    { vec3(-0.5f,  0.5f,  0.5f), vec3( 0,  0,  1), vec2(0.0f, 0.0f) },
+    { vec3( 0.5f,  0.5f,  0.5f), vec3( 0,  0,  1), vec2(1.0f, 0.0f) },
+    { vec3(-0.5f, -0.5f,  0.5f), vec3( 0,  0,  1), vec2(0.0f, 1.0f) },
+    { vec3( 0.5f, -0.5f,  0.5f), vec3( 0,  0,  1), vec2(1.0f, 1.0f) },
+    // RIGHT                           
+    { vec3( 0.5f,  0.5f,  0.5f), vec3( 1,  0,  0), vec2(0.0f, 0.0f) },
+    { vec3( 0.5f,  0.5f, -0.5f), vec3( 1,  0,  0), vec2(1.0f, 0.0f) },
+    { vec3( 0.5f, -0.5f,  0.5f), vec3( 1,  0,  0), vec2(0.0f, 1.0f) },
+    { vec3( 0.5f, -0.5f, -0.5f), vec3( 1,  0,  0), vec2(1.0f, 1.0f) },
     // LEFT
-    { vec3(-0.5f,  0.5f, -0.5f), vec3(-1, 0, 0) },
-    { vec3(-0.5f,  0.5f,  0.5f), vec3(-1, 0, 0) },
-    { vec3(-0.5f, -0.5f, -0.5f), vec3(-1, 0, 0) },
-    { vec3(-0.5f, -0.5f,  0.5f), vec3(-1, 0, 0) },
+    { vec3(-0.5f,  0.5f, -0.5f), vec3(-1,  0,  0), vec2(0.0f, 0.0f) },
+    { vec3(-0.5f,  0.5f,  0.5f), vec3(-1,  0,  0), vec2(1.0f, 0.0f) },
+    { vec3(-0.5f, -0.5f, -0.5f), vec3(-1,  0,  0), vec2(0.0f, 1.0f) },
+    { vec3(-0.5f, -0.5f,  0.5f), vec3(-1,  0,  0), vec2(1.0f, 1.0f) },
     // TOP
-    { vec3(-0.5f,  0.5f, -0.5f), vec3(0, 1, 0) },
-    { vec3( 0.5f,  0.5f, -0.5f), vec3(0, 1, 0) },
-    { vec3(-0.5f,  0.5f,  0.5f), vec3(0, 1, 0) },
-    { vec3( 0.5f,  0.5f,  0.5f), vec3(0, 1, 0) },
+    { vec3(-0.5f,  0.5f, -0.5f), vec3( 0,  1,  0), vec2(0.0f, 0.0f) },
+    { vec3( 0.5f,  0.5f, -0.5f), vec3( 0,  1,  0), vec2(1.0f, 0.0f) },
+    { vec3(-0.5f,  0.5f,  0.5f), vec3( 0,  1,  0), vec2(0.0f, 1.0f) },
+    { vec3( 0.5f,  0.5f,  0.5f), vec3( 0,  1,  0), vec2(1.0f, 1.0f) },
     // BOTTOM
-    { vec3(-0.5f, -0.5f,  0.5f), vec3(0, -1, 0) },
-    { vec3( 0.5f, -0.5f,  0.5f), vec3(0, -1, 0) },
-    { vec3(-0.5f, -0.5f, -0.5f), vec3(0, -1, 0) },
-    { vec3( 0.5f, -0.5f, -0.5f), vec3(0, -1, 0) },
+    { vec3(-0.5f, -0.5f,  0.5f), vec3( 0, -1,  0), vec2(0.0f, 0.0f) },
+    { vec3( 0.5f, -0.5f,  0.5f), vec3( 0, -1,  0), vec2(1.0f, 0.0f) },
+    { vec3(-0.5f, -0.5f, -0.5f), vec3( 0, -1,  0), vec2(0.0f, 1.0f)},
+    { vec3( 0.5f, -0.5f, -0.5f), vec3( 0, -1,  0), vec2(1.0f, 1.0f) },
     // BACK
-    { vec3( 0.5f,  0.5f, -0.5f), vec3(0, 0, -1) },
-    { vec3(-0.5f,  0.5f, -0.5f), vec3(0, 0, -1) },
-    { vec3( 0.5f, -0.5f, -0.5f), vec3(0, 0, -1) },
-    { vec3(-0.5f, -0.5f, -0.5f), vec3(0, 0, -1) },
+    { vec3( 0.5f,  0.5f, -0.5f), vec3( 0,  0, -1), vec2(0.0f, 0.0f) },
+    { vec3(-0.5f,  0.5f, -0.5f), vec3( 0,  0, -1), vec2(1.0f, 0.0f) },
+    { vec3( 0.5f, -0.5f, -0.5f), vec3( 0,  0, -1), vec2(0.0f, 1.0f) },
+    { vec3(-0.5f, -0.5f, -0.5f), vec3( 0,  0, -1), vec2(1.0f, 1.0f) },
 };
 
 // Index Buffer (CUBE)
@@ -124,6 +129,9 @@ int main()
     g_renderer.SetRenderCallback(&Render);
     g_renderer.SetUpdateCallback(&Update);
     g_renderer.SetResizeCallback(&Resize);
+    
+    // Load the bitmap
+    bmp.LoadFile("grass_T.bmp");
     
     // Call resize once to initialize the projection matrix
     Resize(g_renderer.GetWidth(), g_renderer.GetHeight());

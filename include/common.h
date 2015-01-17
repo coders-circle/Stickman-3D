@@ -6,6 +6,7 @@
 #include <math.h>
 #include <functional> 
 #include <vector>
+#include <fstream>
 
 
 #include <thread>

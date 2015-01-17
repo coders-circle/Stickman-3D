@@ -29,8 +29,59 @@ struct RGBColor
     RGBColor(uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0)
     : r(red), g(green), b(blue)
     {}
-    uint8_t r, g, b;
+    uint8_t b,g,r;
 };
+
+class vec2
+{
+public:
+    union
+    {
+        struct { float u, v; };
+        struct { float x, y; };
+    };
+    vec2() : x(0.0f), y(0.0f) {}
+    vec2(float x, float y) : x(x), y(y) {}
+
+    vec2 operator+(const vec2 &other) const
+    {
+        return vec2(x+other.x, y+other.y);
+    }
+    vec2 operator-(const vec2 &other) const
+    {
+        return vec2(x-other.x, y-other.y);
+    }
+    vec2 operator*(float p) const
+    {
+        return vec2(x*p, y*p);
+    }
+    vec2 operator/(float p) const
+    {
+        return vec2(x/p, y/p);
+    }
+  
+    float& operator[] (size_t i)
+    {
+        return (&x)[i];
+    }
+
+    float operator[] (size_t i) const
+    {
+        return (&x)[i];
+    }
+
+    float Length()
+    {
+        return sqrtf(x*x+y*y);
+    }
+    void Normalize()
+    {
+        float l = Length();
+        x /= l;
+        y /= l;
+    }
+};
+
 
 class vec3
 {
@@ -42,7 +93,8 @@ public:
     };
     vec3() : x(0.0f), y(0.0f), z(0.0f) {}
     vec3(float x, float y, float z) : x(x), y(y), z(z) {}
-    vec3(const RGBColor &color) : r(color.r), g(color.g), b(color.b) {}
+    vec3(const RGBColor &color) : r(color.r/255.0f), g(color.g/255.0f), b(color.b/255.0f) {}
+    vec3(const vec2& v) : x(v.x), y(v.y), z(0.0f) {}
 
     vec3 operator+(const vec3 &other) const
     {
@@ -83,6 +135,11 @@ public:
         z /= l;
     }
 
+    operator vec2() const
+    {
+        return vec2(x, y);
+    }
+
 
     operator RGBColor() const
     {
@@ -101,6 +158,7 @@ public:
     vec4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
     vec4(float x, float y, float z, float w = 1.0f) : x(x), y(y), z(z), w(w) {}
     vec4(const vec3& v) : x(v.x), y(v.y), z(v.z), w(1.0f) {}
+    vec4(const vec2& v) : x(v.x), y(v.y), z(0.0f), w(1.0f) {}
 
     vec4 operator+(const vec4 &other) const
     {
@@ -137,6 +195,11 @@ public:
     operator vec3() const
     {
         return vec3(r, g, b);
+    }
+
+    operator vec2() const
+    {
+        return vec2(x, y);
     }
 
     float Length()
