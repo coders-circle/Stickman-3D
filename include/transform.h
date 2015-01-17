@@ -11,6 +11,16 @@ inline mat4 Translate(const vec3& v)
     );
 }
 
+inline mat4 Scale(float scale)
+{
+    return mat4(
+        scale, 0, 0, 0,
+        0, scale, 0, 0,
+        0, 0, scale, 0,
+        0, 0, 0, 1
+    );
+}
+
 inline mat4 RotateY(float angle)
 {
     return mat4(

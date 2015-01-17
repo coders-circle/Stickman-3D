@@ -103,7 +103,7 @@ void Render()
 {
     // Before rendering, store the model and composite ModelViewProjection matrices
     // so that vertex shader may use these
-    model = Translate(vec3(0,0,-3))*RotateY(angle);
+    model = Translate(vec3(angle/2,0,-3));//*RotateY(angle);
     transform = persp * model;  
 
     // Draw the triangles with given vertices, indices, VertexShader and FragmentShader
