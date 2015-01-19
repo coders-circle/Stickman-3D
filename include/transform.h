@@ -21,6 +21,16 @@ inline mat4 Scale(float scale)
     );
 }
 
+inline mat4 Scale(const vec3& v)
+{
+    return mat4(
+        v.x, 0, 0, 0,
+        0, v.y, 0, 0,
+        0, 0, v.z, 0,
+        0, 0, 0, 1
+    );
+}
+
 inline mat4 RotateY(float angle)
 {
     return mat4(

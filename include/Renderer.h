@@ -71,6 +71,7 @@ public:
                DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
         }
         delete[] points;
+        delete[] vs;
     }
         
     // Process each vertex through vertexShader and

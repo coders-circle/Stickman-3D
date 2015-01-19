@@ -1,0 +1,16 @@
+When DrawTriangles is called,
+1. Vertex Shader is called for every vertex passed
+2. For each triangle (formed from indices), triangles is tested if need to completly clipped or culled
+3. Each triangle (that is not culled or clipped) is now rasterized
+4. During rasterization, edges are formed and scan filling is used to find pixels to plot
+5. As we scan, vertex attributes and depth are interpolated as well
+6. Finally Fragment Shader is called with a parameter "point", which contains pixel (x,y) position, depth and attributes
+Note:
+Vertex Shader is called for each vertex and returns:
+- position in NDC (homogeneous coordinates) of the vertex
+- varying attributes that need to be interpolated during rasterization
+Fragment is called for each pixel and gets
+- pixel position
+- depth
+- interpolated attributes
+and is responsible to calculate color for that pixel (illumination and stuffs) and plot at given point with calculated color
