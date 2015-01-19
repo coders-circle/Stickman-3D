@@ -123,6 +123,10 @@ void Update(double dt)
     angle += dt;
 }
 
+#ifdef _WIN32
+#pragma comment(lib, "SDL2.lib")
+#endif
+
 int main()
 {
     g_renderer.Initialize("Test Renderer", 100, 100, 800, 600);
