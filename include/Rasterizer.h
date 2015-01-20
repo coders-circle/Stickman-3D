@@ -113,12 +113,12 @@ public:
 
             x = pt1[0];
             y = pt1[1];
-            d = 1/p1->d;
-            dincr = (1/p2->d-1/p1->d)/float(dy);
+            d = p1->d;
+            dincr = (p2->d-p1->d)/float(dy);
             for (int i=0; i<N; ++i)
             {
-                attrs[i] = p1->varying[i]*d;
-                attrs_incr[i] = (p2->varying[i]/p2->d - p1->varying[i]*d)/float(dy);
+                attrs[i] = p1->varying[i];
+                attrs_incr[i] = (p2->varying[i] - p1->varying[i])/float(dy);
             }
         }
         
@@ -184,7 +184,7 @@ public:
         Point<N> point;
         float xdiff;
 
-        float dincr, dr; vec4 attrs_incr[N], attrs_r[N];
+        float dincr; vec4 attrs_incr[N];
         while (true)
         {
             int y = p.e1->y;
@@ -203,20 +203,18 @@ public:
                     xdiff = p.e2->x - p.e1->x;
 
                     dincr = (p.e2->d - p.e1->d)/float(xdiff);
-                    dr = p.e1->d;
+                    point.d = p.e1->d;
                     for (int i=0; i<N; ++i)
                     {
                         attrs_incr[i] = (p.e2->attrs[i] - p.e1->attrs[i])/float(xdiff);
-                        attrs_r[i] = p.e1->attrs[i];
-                        point.varying[i] = attrs_r[i] / dr;
+                        point.varying[i] = p.e1->attrs[i];
                     }
 
                     // for each point as we scan interpolate depth and attributes
                     for (point.pos[0] = x1; point.pos[0] <= x2; ++point.pos[0])
                     {
                         // depth clipping (d < 0 and d > 1) Since depth buffer store 1 at max, d>1 is automatically tested
-                        point.d = 1/dr;
-                        if (point.x > 0)
+                        if (point.d > 0)
                         {
                             // Depth test
                             float& depth = depthBuffer[point.pos[1]*w+point.pos[0]];
@@ -228,12 +226,9 @@ public:
                             }
                         }   
                         // Increment the depth and attributes
-                        dr += dincr;
+                        point.d += dincr;
                         for (int i=0; i<N; ++i)
-                        {
-                            attrs_r[i] = attrs_r[i] + attrs_incr[i];
-                            point.varying[i] = attrs_r[i] / dr;
-                        }
+                            point.varying[i] = point.varying[i] + attrs_incr[i];
                     }
                 }
             }
