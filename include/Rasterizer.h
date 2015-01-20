@@ -18,7 +18,11 @@ public:
         pos[1] = v.y;
         d = v.z;
     }
-    int pos[2];
+    union
+    {
+        struct { int pos[2]; };
+        struct { int x, y; };
+    };
     float d;
     vec4 varying[N];
 };
@@ -80,18 +84,19 @@ private:
     class Edge
     {
 public:
-        int x2, tdx, tdy, dy, x, y, y2, c;
+        Point<N>* p1, *p2;        
+        int tdx, tdy, dy, x, y, c;
         int xinc, yinc;
 
-        float d, ddiff;
-        Point<N>* initial;        
-        vec4 at_diffs[N];
-        vec4 attrs[N];
+        float d, dincr;
+        vec4 attrs[N], attrs_incr[N];
     
         void Initialize(Point<N>* point1, Point<N>* point2)
         {
             if (point1->pos[1] > point2->pos[1])
                 Swap(point1, point2);
+            p1 = point1;
+            p2 = point2;
             int* pt1 = point1->pos;
             int* pt2 = point2->pos;
             tdx = 2*(pt2[0] - pt1[0]);
@@ -105,18 +110,15 @@ public:
             dy = pt2[1] - pt1[1];
             tdy = 2*dy;
             c = 0;
+
             x = pt1[0];
-            x2 = pt2[0];
             y = pt1[1];
-            y2 = pt2[1];
-            
-            initial = point1;
-            d = point1->d;
-            ddiff = point2->d - point1->d;
+            d = 1/p1->d;
+            dincr = (1/p2->d-1/p1->d)/float(dy);
             for (int i=0; i<N; ++i)
             {
-                at_diffs[i] = point2->varying[i] - point1->varying[i];
-                attrs[i] = point1->varying[i];
+                attrs[i] = p1->varying[i]*d;
+                attrs_incr[i] = (p2->varying[i]/p2->d - p1->varying[i]*d)/float(dy);
             }
         }
         
@@ -126,19 +128,19 @@ public:
         bool NextY()
         {
             ++y;
-            if (y > y2)
-                return false;
-            
-            float f = float(y-initial->pos[1])/float(dy);
-            d = initial->d + ddiff * f;
+            d += dincr;
             for (int i=0; i<N; ++i)
-                attrs[i] = initial->varying[i] + at_diffs[i]*f;
+                attrs[i] = attrs[i] + attrs_incr[i];
+
             c += tdx;
             while (c >= dy)
             {
                 x += xinc;
                 c -= tdy;
             }
+
+            if (y > p2->y)
+                return false;
             return true;
         }
     };
@@ -152,7 +154,7 @@ public:
         Pair(Edge<N> *_e1, Edge<N>*_e2)
         : e1(_e1), e2(_e2)
         {
-              if (e1->initial->pos[0] > e2->initial->pos[0])
+              if (e1->p1->pos[0] > e2->p1->pos[0])
                 Swap(e1, e2);
               
         }
@@ -179,10 +181,10 @@ public:
         //  find next Y
         // Do this till y's of edges exhaust or y is beyond the window height
 
-        vec4 at_diffs[N];
         Point<N> point;
         float xdiff;
-        float ddiff;
+
+        float dincr, dr; vec4 attrs_incr[N], attrs_r[N];
         while (true)
         {
             int y = p.e1->y;
@@ -199,28 +201,38 @@ public:
 
                     point.pos[1] = y;
                     xdiff = p.e2->x - p.e1->x;
-                    {
-                        ddiff = p.e2->d - p.e1->d;
-                        for (int i=0; i<N; ++i)
-                            at_diffs[i] = p.e2->attrs[i] - p.e1->attrs[i];
 
-                        // for each point as we scan interpolate depth and attributes
-                        for (point.pos[0] = x1; point.pos[0] <= x2; ++point.pos[0])
+                    dincr = (p.e2->d - p.e1->d)/float(xdiff);
+                    dr = p.e1->d;
+                    for (int i=0; i<N; ++i)
+                    {
+                        attrs_incr[i] = (p.e2->attrs[i] - p.e1->attrs[i])/float(xdiff);
+                        attrs_r[i] = p.e1->attrs[i];
+                        point.varying[i] = attrs_r[i] / dr;
+                    }
+
+                    // for each point as we scan interpolate depth and attributes
+                    for (point.pos[0] = x1; point.pos[0] <= x2; ++point.pos[0])
+                    {
+                        // depth clipping (d < 0 and d > 1) Since depth buffer store 1 at max, d>1 is automatically tested
+                        point.d = 1/dr;
+                        if (point.x > 0)
                         {
-                            float factor = float(point.pos[0]-p.e1->x)/xdiff;
-                            point.d = p.e1->d + ddiff * factor;
-                            // depth clipping (d < 0 and d > 1) Since depth buffer store 1 at max, d>1 is automatically tested
-                            if (point.d < 0)
-                                continue;
                             // Depth test
                             float& depth = depthBuffer[point.pos[1]*w+point.pos[0]];
-                            if (depth < point.d)
-                                continue;
-
-                            for (int i=0; i<N; ++i)
-                                point.varying[i] = p.e1->attrs[i] + at_diffs[i] * factor;
-                            depth = point.d;
-                            f(point);
+                            if (point.d < depth)
+                            {
+                                depth = point.d;
+                                // Pass to the fragment shader
+                                f(point);
+                            }
+                        }   
+                        // Increment the depth and attributes
+                        dr += dincr;
+                        for (int i=0; i<N; ++i)
+                        {
+                            attrs_r[i] = attrs_r[i] + attrs_incr[i];
+                            point.varying[i] = attrs_r[i] / dr;
                         }
                     }
                 }

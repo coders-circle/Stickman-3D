@@ -84,6 +84,8 @@ public:
         for (size_t i=0; i<numVertices; ++i)
         {
             newVertices[i] = f(points[i].varying, args[i]);
+            for (int j=0; j<N; ++j)
+                points[i].varying[j] = points[i].varying[j];
             v = newVertices[i].ConvertToVec3();
             v.x = (v.x + 1.0f) / 2*m_width;
             v.y = (-v.y + 1.0f) / 2*m_height;
