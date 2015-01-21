@@ -17,30 +17,24 @@ struct Vertex
 };
 
 
-// VertexShader is called for each vertex and is expected to return
-//  position of vertex in clip space and the varying attributes
-// The varyings are attributes that vary for each pixel
-//  These attributes are interpolated for intermediate pixels between the vertices
-//  The number of varying depends on the input of the FragmentShader 
-//  used with this VertexShader
-vec4 VertexShader(vec4 varying[], const Vertex& vertex)
+// VertexShader is called for each vertex and is expected to return its
+//  position in clip space as well as its attributes
+vec4 VertexShader(vec4 attribute[], const Vertex& vertex)
 {
-    vec4 p = transform * vec4(vertex.v);        // Transform the vertex by composite ModelViewProjection matrix
-    varying[0] = mat3(model) * vertex.n;              // Transform the normal by model matrix
-    varying[1] = vertex.uv;
-    return p;                                   // Return the position of the vertex in clip-space
+    vec4 p = transform * vec4(vertex.v);
+    attribute[0] = mat3(model) * vertex.n;
+    attribute[1] = vertex.uv;
+    return p;
 }
 
-// Point<N> for point with N-varying attributes
 // This function is called for each pixel
 // The Point contains x,y position of the pixel,
-// the depth value and the interpolated varying attributes
+//  the depth value and the interpolated attributes
 void FragmentShader(Point<2>& point)
 {
-    vec3 n = point.varying[0];  // Take in the interpolated normal
-    n.Normalize();              //  and normalize it
-        
-    vec3 c = bmp.Sample(point.varying[1]);   // Get color by sampling the bitmap    
+    vec3 n = point.attribute[0];
+    n.Normalize();
+    vec3 c = bmp.Sample(point.attribute[1]);
 
     // Perform a simple phong based lighting calculation for directional light
     vec3 dir(-1,0,-1);                   
@@ -98,16 +92,14 @@ uint16_t indices[] =
 };
 
 
-// angle of rotation of the object
 float angle=45.0f*3.1415/180.0f;
+// Store transformations for vertex shader to use and render the triangles
 void Render()
 {
-    // Before rendering, store the model and composite ModelViewProjection matrices
-    // so that vertex shader may use these
     model = Translate(vec3(0,0,-3))*RotateY(angle);
     transform = persp * model;  
 
-    // Draw the triangles with given vertices, indices, VertexShader and FragmentShader
+    // Draw the triangles
     g_renderer.DrawTriangles(&VertexShader, &FragmentShader, vertices, 24, indices, 12);
 }
 

@@ -3,8 +3,8 @@
 #include "Rasterizer.h"
 #include "Timer.h"
 
-// Renderer responsible for drawing pixels and triangles
-// and managing the window
+// Renderer responsible for managing the window
+//  and drawing pixels and triangles
 class Renderer
 {
 public:
@@ -31,12 +31,11 @@ public:
     void SetUpdateCallback(std::function<void(double)> updateCallback) { m_update = updateCallback; }
     void SetResizeCallback(std::function<void(int, int)> resizeCallback) { m_resize = resizeCallback; }
 
-    // Draw a triangle from 3 vertices; the points are pixel points and the function
-    //  is fragment shader called for each intermediate pixels
+    // Draw a triangle from from pixel points
     template<int N>
-    void DrawTriangle(Point<N> &pt1, Point<N> &pt2, Point<N> &pt3, void (*f)(Point<N>&))
+    void DrawTriangle(Point<N> &pt1, Point<N> &pt2, Point<N> &pt3, void (*fragmentShader)(Point<N>&))
     {
-        Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, f, m_width, m_height, m_depthBuffer); 
+        Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, fragmentShader, m_width, m_height, m_depthBuffer); 
     }
     
     // Draw triangles with given vertices and indices
@@ -45,8 +44,8 @@ public:
     template<int N, class Args>
     void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, size_t numVertices, uint16_t* indexBuffer, size_t numTriangles)
     {
-        vec4* vs = new vec4[numVertices];                // array to carry the clip-space vertices after passed through vertexBuffer
-        Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and varyings for each vertex
+        vec4* vs = new vec4[numVertices];                // array to carry the clip-space vertices returned by vertexBuffer
+        Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and their attributes
 
         ProcessVertices(points, vs, vertexShader, vertexBuffer, numVertices);
         // Draw each triangle
@@ -75,17 +74,17 @@ public:
     }
         
     // Process each vertex through vertexShader and
-    // fill 'newVertices' with resulting clip-space vertices
-    // and 'points' with corresponding window-space vertices as well as varyings
+    //  fill 'newVertices' with resulting clip-space vertices
+    //  and 'points' with corresponding window-space points and their attributes
     template<int N, class Args>
     void ProcessVertices(Point<N>*points, vec4* newVertices, vec4(*f)(vec4[], const Args&), Args* args, size_t numVertices)
     {
         vec3 v;
         for (size_t i=0; i<numVertices; ++i)
         {
-            newVertices[i] = f(points[i].varying, args[i]);
+            newVertices[i] = f(points[i].attribute, args[i]);
             for (int j=0; j<N; ++j)
-                points[i].varying[j] = points[i].varying[j];
+                points[i].attribute[j] = points[i].attribute[j];
             v = newVertices[i].ConvertToVec3();
             v.x = (v.x + 1.0f) / 2*m_width;
             v.y = (-v.y + 1.0f) / 2*m_height;
