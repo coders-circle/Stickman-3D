@@ -65,8 +65,8 @@ public:
             float C =   -vs[i1].x*(vs[i2].y*vs[i3].z - vs[i3].y*vs[i2].z)
                         -vs[i2].x*(vs[i3].y*vs[i1].z - vs[i1].y*vs[i3].z)
                         -vs[i3].x*(vs[i1].y*vs[i2].z - vs[i2].y*vs[i1].z);
-            // Triangle is back-face if normal of triangle has z-component(C) <= 0
-            if (C > 0)  
+            // Triangle is back-face if normal of triangle has z-component(C) >= 0 (Anticlockwise is FrontFace)
+            if (C < 0)  
                DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
         }
         delete[] points;
@@ -105,7 +105,7 @@ private:
     SDL_Window* m_window;
     SDL_Surface* m_screen;
     float* m_depthBuffer;
-    
+
     // Clear the color-buffer and the depth-buffer
     void Clear()
     {
@@ -122,3 +122,19 @@ private:
     std::function<void(int, int)> m_resize;
     RGBColor m_clearColor;
 };
+
+// A class to store shaders
+// Shaders are stored as template arguments, which
+// means compile time optimization
+template<Renderer& renderer, class VertexType, int NoOfAttributes,
+        vec4(*vertexShader)(vec4[], const VertexType&), void(*fragmentShader)(Point<NoOfAttributes>&)>
+class Shaders
+{
+public:
+    void DrawTriangles(std::vector<VertexType>& vertices, std::vector<uint16_t>& indices)
+    {
+        renderer.DrawTriangles(vertexShader, fragmentShader, &vertices[0], vertices.size(), &indices[0], indices.size()/3);
+    }
+};
+
+
