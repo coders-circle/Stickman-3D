@@ -45,7 +45,7 @@ void FragmentShader(Point<2>& point)
     // Perform a simple phong based lighting calculation for directional light
     vec3 dir(-1,0,-1);                   
     dir.Normalize();
-    float intensity = Min(Max(n.dot(-dir), 0.0f), 1.0f);
+    float intensity = Min(Max(n.dot(-dir), 0.0f) + 0.05f, 1.0f);
     c = c*intensity;    // "Light" the color
     
     g_renderer.PutPixel(point.pos[0], point.pos[1], c);     // Use the calculated color to plot the pixel
@@ -104,7 +104,7 @@ void Render()
 {
     // Before rendering, store the model and composite ModelViewProjection matrices
     // so that vertex shader may use these
-    model = Translate(vec3(angle/2,0,-3));//*RotateY(angle);
+    model = Translate(vec3(0,0,-3))*RotateY(angle);
     transform = persp * model;  
 
     // Draw the triangles with given vertices, indices, VertexShader and FragmentShader
@@ -125,6 +125,7 @@ void Update(double dt)
 
 #ifdef _WIN32
 #pragma comment(lib, "SDL2.lib")
+#define SDL_main main
 #endif
 
 int main()

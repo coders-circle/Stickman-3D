@@ -4,11 +4,7 @@
 class mat3
 {
 public:
-    union
-    {
-        float m[3][3];
-        vec3 v[3];
-    };
+    float m[3][3];
     
     mat3(const vec3& v1, const vec3& v2, const vec3& v3)
     {
@@ -33,12 +29,12 @@ public:
 
     vec3& operator[] (int n)
     {
-        return v[n];
+        return *((vec3*)&m[n]);
     }
 
     const vec3& operator[] (int n) const
     {
-        return v[n];
+        return *((vec3*)&m[n]);
     }
 
     mat3 operator+ (const mat3& m2) const
@@ -94,11 +90,7 @@ public:
 class mat4
 {
 public:
-    union
-    {
-        float m[4][4];
-        vec4 v[4];
-    };
+    float m[4][4];
     
     mat4(const vec4& v1, const vec4& v2, const vec4& v3, const vec4& v4)
     {
@@ -109,9 +101,9 @@ public:
     }
     mat4(const mat3& mat)
     {
-        (*this)[0] = vec4(mat.v[0], 0.0f);
-        (*this)[1] = vec4(mat.v[1], 0.0f);
-        (*this)[2] = vec4(mat.v[2], 0.0f);
+        (*this)[0] = vec4(mat[0], 0.0f);
+        (*this)[1] = vec4(mat[1], 0.0f);
+        (*this)[2] = vec4(mat[2], 0.0f);
         (*this)[3] = vec4();
     }
     mat4(float f = 1.0f)
@@ -134,12 +126,12 @@ public:
 
     vec4& operator[] (int n)
     {
-        return v[n];
+        return *((vec4*)&m[n]);
     }
 
     const vec4& operator[] (int n) const
     {
-        return v[n];
+        return *((vec4*)&m[n]);
     }
 
     mat4 operator+ (const mat4& m2) const

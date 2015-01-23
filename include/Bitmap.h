@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 class Bitmap
 {
 public:
@@ -20,7 +22,7 @@ public:
             file.seekg(22);
             file.read((char*)&height, sizeof(height));
             
-            if (width > 0 and height > 0)
+            if (width > 0 && height > 0)
             {
                 pixels.resize(width*height);
                 file.seekg(offset);
