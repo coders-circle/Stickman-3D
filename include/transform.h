@@ -41,6 +41,16 @@ inline mat4 RotateY(float angle)
     );
 }
 
+inline mat4 RotateX(float angle)
+{
+    return mat4(
+        1, 0, 0, 0,
+        0, cosf(angle), -sinf(angle), 0,
+        0, sinf(angle), cosf(angle), 0,
+        0, 0, 0, 1
+    );
+}
+
 inline mat4 Perspective(float fov, float aspect, float near, float far)
 {
     float temp = 1.0f / tanf(0.5f * fov);

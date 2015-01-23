@@ -13,6 +13,8 @@ class Mesh
 {
 public:
     Mesh();
+    // Load mesh from a file
+    void LoadFile(const std::string &filename);
     // Load a box as the mesh
     void LoadBox(float halfLength, float halfHeight, float halfWidth);
     // Load a sphere as the mesh

@@ -5,6 +5,27 @@ Mesh::Mesh()
  : m_textureId(0)
 {}
 
+void Mesh::LoadFile(const std::string &filename)
+{
+    std::fstream file;
+    file.open(filename, std::ios::binary | std::ios::in);
+    if (!file.good())
+    {
+        std::cout << "Couldn't load mesh from file: " << filename << std::endl;
+        return;
+    }
+
+    uint32_t nvertices;
+    file.read((char*)&nvertices, sizeof(nvertices));
+    m_vertices.resize(nvertices);
+    file.read((char*)&m_vertices[0], nvertices*sizeof(Vertex));
+
+    uint32_t nindices;
+    file.read((char*)&nindices, sizeof(nindices));
+    m_indices.resize(nindices);
+    file.read((char*)&m_indices[0], nindices*sizeof(uint16_t));
+}
+
 void Mesh::LoadBox(float x, float y, float z)
 {
     m_vertices.resize(24);

@@ -34,7 +34,7 @@ void FragmentShader(Point<2>& point)
     // Perform a simple phong based lighting calculation for directional light
     vec3 dir(-1,0,-1);                   
     dir.Normalize();
-    float intensity = Min(Max(n.dot(-dir), 0.0f) + 0.05f, 1.0f);
+    float intensity = Min(Max(n.dot(-dir), 0.0f) + 0.09f, 1.0f);
     c = c*intensity;    // "Light" the color
     
     g_renderer.PutPixel(point.pos[0], point.pos[1], c);     // Use the calculated color to plot the pixel
@@ -44,11 +44,12 @@ auto shaders =
 //              Shaders<Renderer&, VertexClass, NumberOfAttributes, VertexShaderFunction, FragmentShaderFunction>
                 Shaders<g_renderer, Vertex, 2, &VertexShader, &FragmentShader>();
 
-float angle=45.0f*3.1415/180.0f;
+float angle=45.0f*3.1415f/180.0f;
+mat4 Rotate = RotateX(-90*3.1415f/180.0f);
 // Render objects
 void Render()
 {
-    model = Translate(vec3(0,0,-3))*RotateY(angle);
+    model = Translate(vec3(0,-1,-3))*RotateY(angle)*Rotate*Scale(0.25f);
     transform = persp * model;  
 
     texId = g_mesh.GetTextureId();
@@ -77,9 +78,10 @@ int main()
     
     // And create the mesh
     //g_mesh.LoadBox(0.5f, 0.5f, 0.5f);
-    g_mesh.LoadSphere(0.5f, 42, 42);
+    //g_mesh.LoadSphere(0.5f, 42, 42);
+    g_mesh.LoadFile("test.dat");
     // Load the texture
-    g_mesh.SetTextureId(g_textureManager.AddTexture("grass_T.bmp"));
+//    g_mesh.SetTextureId(g_textureManager.AddTexture("grass_T.bmp"));
     
     // Call resize once to initialize the projection matrix
     Resize(g_renderer.GetWidth(), g_renderer.GetHeight());

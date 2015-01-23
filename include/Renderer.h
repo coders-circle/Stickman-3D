@@ -113,7 +113,7 @@ private:
         for (int j = 0; j < m_height; ++j)
         {
             PutPixelUnsafe(i, j, m_clearColor); // Clear the color buffer
-            m_depthBuffer[j*m_height+i] = 1.0f; // Clear the depth buffer
+            m_depthBuffer[i*m_height+j] = 1.0f; // Clear the depth buffer
         }
     }
 
