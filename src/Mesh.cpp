@@ -36,7 +36,7 @@ void Mesh::LoadBox(float x, float y, float z)
         { vec3(-x,  y,  z), vec3( 0,  0,  1), vec2(0.0f, 0.0f) },
         { vec3( x, -y,  z), vec3( 0,  0,  1), vec2(1.0f, 1.0f) },
         { vec3(-x, -y,  z), vec3( 0,  0,  1), vec2(0.0f, 1.0f) },
-        // RIGHTx   y   z         
+        // RIGHT
         { vec3( x,  y, -z), vec3( 1,  0,  0), vec2(1.0f, 0.0f) },
         { vec3( x,  y,  z), vec3( 1,  0,  0), vec2(0.0f, 0.0f) },
         { vec3( x, -y, -z), vec3( 1,  0,  0), vec2(1.0f, 1.0f) },
@@ -51,7 +51,7 @@ void Mesh::LoadBox(float x, float y, float z)
         { vec3(-x,  y, -z), vec3( 0,  1,  0), vec2(0.0f, 0.0f) },
         { vec3( x,  y,  z), vec3( 0,  1,  0), vec2(1.0f, 1.0f) },
         { vec3(-x,  y,  z), vec3( 0,  1,  0), vec2(0.0f, 1.0f) },
-        // BOTTOx
+        // BOTTOM
         { vec3( x, -y,  z), vec3( 0, -1,  0), vec2(1.0f, 0.0f) },
         { vec3(-x, -y,  z), vec3( 0, -1,  0), vec2(0.0f, 0.0f) },
         { vec3( x, -y, -z), vec3( 0, -1,  0), vec2(1.0f, 1.0f) },

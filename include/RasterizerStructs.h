@@ -12,11 +12,12 @@ public:
         pos[0]=x;
         pos[1]=y;
     }
-    void FromVec3(const vec3& v)
+    void FromVec4(const vec4& v)
     {
         pos[0] = v.x;
         pos[1] = v.y;
         d = v.z;
+        w = 1.0f/v.w;
     }
     union
     {
@@ -24,6 +25,7 @@ public:
         struct { int x, y; };
     };
     float d;
+    float w;
     vec4 attribute[N];
 };
 
@@ -38,6 +40,8 @@ public:
 
     float d, dincr;
     vec4 attrs[N], attrs_incr[N];
+
+    float w, wincr;
 
     void Initialize(Point<N>* point1, Point<N>* point2)
     {
@@ -63,28 +67,33 @@ public:
         y = pt1[1];
         d = p1->d;
         dincr = (p2->d-p1->d)/float(dy);
+        w = p1->w;
+        wincr = (p2->w-p1->w)/float(dy);
+
         for (int i=0; i<N; ++i)
         {
-            attrs[i] = p1->attribute[i];
-            attrs_incr[i] = (p2->attribute[i] - p1->attribute[i])/float(dy);
+            attrs[i] = p1->attribute[i]*p1->w;
+            attrs_incr[i] = (p2->attribute[i]*p2->w - p1->attribute[i]*p1->w)/float(dy);
         }
     }
+
     
     // Increment Y and update X, depth and attributes
     bool NextY()
     {
         ++y;
         d += dincr;
+        w+= wincr;
+
         for (int i=0; i<N; ++i)
             attrs[i] = attrs[i] + attrs_incr[i];
-
+        
         c += tdx;
         while (c >= dy)
         {
             x += xinc;
             c -= tdy;
         }
-
         if (y > p2->y)
             return false;
         return true;

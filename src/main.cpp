@@ -7,59 +7,68 @@
 Renderer g_renderer;
 TextureManager g_textureManager;
 Mesh g_mesh;
+Mesh g_mesh2;
 
 
-mat4 transform, model, persp;
+mat4 transform, model;
+mat4 vp, light_vp, bias_light_mvp ;
 size_t texId;
+vec3 lightDir(-1.5, -2, -1);
 
-// VertexShader is called for each vertex and is expected to return its
-//  position in clip space as well as its attributes
-vec4 VertexShader(vec4 attribute[], const Vertex& vertex)
-{
-    vec4 p = transform * vec4(vertex.position);
-    attribute[0] = mat3(model) * vertex.normal;
-    attribute[1] = vertex.texcoords;
-    return p;
-}
+mat4 bias_matrix
+(
+    0.5f, 0, 0, 0.5f,
+    0, -0.5f, 0, 0.5f,
+    0, 0, 0.5f, 0.5f,
+    0, 0, 0, 1
+)
+;
 
-// This function is called for each pixel
-// The Point contains x,y position of the pixel,
-//  the depth value and the interpolated attributes
-void FragmentShader(Point<2>& point)
-{
-    vec3 n = point.attribute[0];
-    n.Normalize();
-    vec3 c = g_textureManager.GetTexture(texId).Sample(point.attribute[1]);
-
-    // Perform a simple phong based lighting calculation for directional light
-    vec3 dir(-1,0,-1);                   
-    dir.Normalize();
-    float intensity = Min(Max(n.dot(-dir), 0.0f) + 0.09f, 1.0f);
-    c = c*intensity;    // "Light" the color
-    
-    g_renderer.PutPixel(point.pos[0], point.pos[1], c);     // Use the calculated color to plot the pixel
-}
-
-auto shaders = 
-//              Shaders<Renderer&, VertexClass, NumberOfAttributes, VertexShaderFunction, FragmentShaderFunction>
-                Shaders<g_renderer, Vertex, 2, &VertexShader, &FragmentShader>();
+#include <shaders/shaders3d.h>
+#include <shaders/depth_shaders3d.h>
 
 float angle=45.0f*3.1415f/180.0f;
 mat4 Rotate = RotateX(-90*3.1415f/180.0f);
 // Render objects
 void Render()
 {
-    model = Translate(vec3(0,-1,-3))*RotateY(angle)*Rotate*Scale(0.25f);
-    transform = persp * model;  
+    g_renderer.UseDepthBuffer(1);
+    g_renderer.ClearDepth();
+    model = Translate(vec3(0,-1,0))*RotateY(angle)*Rotate*Scale(0.25f);
+    transform = light_vp * model;  
+    texId = g_mesh.GetTextureId();
+    g_mesh.Draw(shadersDepth);
 
+    model = Translate(vec3(0, -1-0.05f, 0));
+    transform = light_vp * model;
+    texId = g_mesh2.GetTextureId();
+    g_mesh2.Draw(shadersDepth);
+
+    g_renderer.UseDepthBuffer(0);
+    g_renderer.ClearColorAndDepth();
+    model = Translate(vec3(0,-1,0))*RotateY(angle)*Rotate*Scale(0.25f);
+    transform = vp * model;
+    bias_light_mvp = bias_matrix * light_vp * model;
     texId = g_mesh.GetTextureId();
     g_mesh.Draw(shaders);
+
+    model = Translate(vec3(0, -1-0.05f, 0));
+    transform = vp * model;
+    bias_light_mvp = bias_matrix * light_vp * model;
+    texId = g_mesh2.GetTextureId();
+    g_mesh2.Draw(shaders);
 }
 
 // On resize of window, we calculate the projection matrix
 void Resize(int width, int height)
-{
-    persp = Perspective(60*3.1415f/180.0f, float(g_renderer.GetWidth())/float(g_renderer.GetHeight()), 0.1f, 100.0f);
+{   
+    mat4 proj = Orthographic(-3, 3, -3, 3, -10.0f, 10.0f);
+    mat4 view = LookAt(-lightDir, vec3(0,0,0), vec3(0,1,0));
+    light_vp = proj*view;
+
+    view = LookAt(vec3(-3, 1, 4), vec3(0,0,0), vec3(0,1,0));
+    proj = Perspective(60*3.1415f/180.0f, float(width)/float(height), 0.1f, 100.0f);
+    vp = proj*view;
 }
 
 // Update each frame by time-step dt
@@ -76,12 +85,15 @@ int main()
     g_renderer.SetUpdateCallback(&Update);
     g_renderer.SetResizeCallback(&Resize);
     
+
+    g_renderer.AddDepthBuffer();
     // And create the mesh
     //g_mesh.LoadBox(0.5f, 0.5f, 0.5f);
-    //g_mesh.LoadSphere(0.5f, 42, 42);
+    //g_mesh.LoadSphere(5.0f, 42, 42);
     g_mesh.LoadFile("test.dat");
+    g_mesh2.LoadBox(3.0f, 0.05f, 3.0f);
     // Load the texture
-//    g_mesh.SetTextureId(g_textureManager.AddTexture("grass_T.bmp"));
+   // g_mesh.SetTextureId(g_textureManager.AddTexture("grass_T.bmp"));
     
     // Call resize once to initialize the projection matrix
     Resize(g_renderer.GetWidth(), g_renderer.GetHeight());
