@@ -1,5 +1,7 @@
 #pragma once
 
+float depthTest = 0.007f;
+
 // VertexShader is called for each vertex and is expected to return its
 //  position in clip space as well as its attributes
 vec4 VertexShader(vec4 attribute[], const Vertex& vertex)
@@ -7,7 +9,7 @@ vec4 VertexShader(vec4 attribute[], const Vertex& vertex)
     vec4 p = transform * vec4(vertex.position);
     attribute[0] = mat3(model) * vertex.normal;
     attribute[1] = vertex.texcoords;
-
+    
     // Take to light space
     attribute[2] = bias_light_mvp * vec4(vertex.position);
     attribute[2] = attribute[2].ConvertToVec3();
@@ -31,8 +33,8 @@ void FragmentShader(Point<3>& point)
     size_t samplingPos = int(lpos.y)*g_renderer.GetWidth() + (int)lpos.x;
     if (samplingPos < g_renderer.GetWidth()*g_renderer.GetHeight())
         sample = g_renderer.GetDepthBuffer(1)[samplingPos];
-
-    if (sample - lpos.z < -0.01f)
+    
+    if (sample - lpos.z < -depthTest)
         c = c*0.1f;
 
     // Perform a simple phong based lighting calculation for directional light

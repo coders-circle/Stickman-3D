@@ -79,7 +79,7 @@ private:
 
                     dincr = (p.e2->d - p.e1->d)/float(xdiff);
                     point.d = p.e1->d + start*dincr;
-                    wincr = (p.e2->w - p.e2->w)/float(xdiff);
+                    wincr = (p.e2->w - p.e1->w)/float(xdiff);
                     w = p.e1->w + start*wincr;
                     for (int i=0; i<N; ++i)
                     {

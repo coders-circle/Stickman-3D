@@ -25,8 +25,8 @@ public:
         struct { int x, y; };
     };
     float d;
-    float w;
     vec4 attribute[N];
+    float w;                // w is stored for perspective correct interpolation
 };
 
 // Edge stores a pair of points, sorted by y-coordinate
@@ -74,6 +74,13 @@ public:
         {
             attrs[i] = p1->attribute[i]*p1->w;
             attrs_incr[i] = (p2->attribute[i]*p2->w - p1->attribute[i]*p1->w)/float(dy);
+            /*
+                Perspective correct interpolation of attributes is given as:
+                    A = (A1/w1 + s(A2/w2-A1/w1))/(1/w)
+                So we linearly interpolate from A1/w1 to A2/w2
+                and at just at end, multiply by w
+                Note: the "w" member of Point and Edge class stores 1/w instead of w
+            */
         }
     }
 
