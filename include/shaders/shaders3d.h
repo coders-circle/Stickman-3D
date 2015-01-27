@@ -28,6 +28,17 @@ public:
         attribute[2].y = (attribute[2].y) * g_renderer.GetHeight();
         return p;
     }
+
+    // Get depth sample from the depthbuffer with light-space x,y-coordinates
+    // This gives closest depth to the light
+    static float GetSample(float x, float y)
+    {
+        float sample = 1.0f;
+        size_t samplingPos = int(y)*g_renderer.GetWidth() + (int)x;
+        if (samplingPos < g_renderer.GetWidth()*g_renderer.GetHeight())
+            sample = g_renderer.GetDepthBuffer(1)[samplingPos];
+        return sample;
+    }
     
     // This function is called for each pixel
     // The Point contains x,y position of the pixel,
@@ -43,17 +54,17 @@ public:
         
         // Light space position of pixel
         vec3 lpos = point.attribute[2];
-
-        // Get depth sample from the depthbuffer with light-space x,y-coordinates
-        // This gives closest depth to the light
-        float sample = 1.0f;
-        size_t samplingPos = int(lpos.y)*g_renderer.GetWidth() + (int)lpos.x;
-        if (samplingPos < g_renderer.GetWidth()*g_renderer.GetHeight())
-            sample = g_renderer.GetDepthBuffer(1)[samplingPos];
+   
+        float visibility = 1.0f;
+        // Compare light space depth of this pixel with
+        // sample depth of this and nearby pixels from depthbuffer
+        for (float i=-1.5f; i<=1.5f; i+=1.5f)
+            for (float j=-1.5f; j<=1.5f; j+=1.5f)
+                if (GetSample(lpos.x + i, lpos.y +j) < lpos.z - uniforms.depthBias)
+                    visibility -= 0.06f;
+        //visibility = Max(0.0f, visibility);
         
-        // Check if light space depth of this pixel is more than that sampled from depthBuffer
-        if (sample - lpos.z < -uniforms.depthBias)
-            c = c*0.1f;     // if so, pixel is in shadow
+        c = c * visibility;
     
         // Perform a simple phong based lighting calculation for directional light
         vec3 dir = g_renderer.lights.lightDirection;                   // assuming this is normalized
