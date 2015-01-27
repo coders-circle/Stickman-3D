@@ -1,7 +1,7 @@
 #pragma once
 #include "matrix.h"
-#include "Rasterizer.h"
 #include "Timer.h"
+#include "Rasterizer.h"
 
 // Renderer responsible for managing the window
 //  and drawing pixels and triangles
@@ -42,7 +42,7 @@ public:
     //  The vertices are passed through the vertexShader function
     //  and rasterized. Each pixel is then passed through the framentShader function
     template<int N, class Args>
-    void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, size_t numVertices, uint16_t* indexBuffer, size_t numTriangles, bool backface = false)
+    void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, size_t numVertices, uint16_t* indexBuffer, size_t numTriangles, bool backfaceVisible = false)
     {
         vec4* vs = new vec4[numVertices];                // array to carry the clip-space vertices returned by vertexBuffer
         Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and their attributes
@@ -54,22 +54,20 @@ public:
             size_t i1 = indexBuffer[i*3], i2 = indexBuffer[i*3+1], i3 = indexBuffer[i*3+2];
 
             // Clip-Space clipping
-            if (
-                (vs[i1].x < -vs[i1].w && vs[i2].x < -vs[i2].w && vs[i3].x < -vs[i3].w) ||
+            if ((vs[i1].x < -vs[i1].w && vs[i2].x < -vs[i2].w && vs[i3].x < -vs[i3].w) ||
                 (vs[i1].y < -vs[i1].w && vs[i2].y < -vs[i2].w && vs[i3].y < -vs[i3].w) ||
                 (vs[i1].z < -vs[i1].w && vs[i2].z < -vs[i2].w && vs[i3].z < -vs[i3].w) ||
                 (vs[i1].x > vs[i1].w && vs[i2].x > vs[i2].w && vs[i3].x > vs[i3].w) ||
                 (vs[i1].y > vs[i1].w && vs[i2].y > vs[i2].w && vs[i3].y > vs[i3].w) ||
-                (vs[i1].z > vs[i1].w && vs[i2].z > vs[i2].w && vs[i3].z > vs[i3].w)
-                )
+                (vs[i1].z > vs[i1].w && vs[i2].z > vs[i2].w && vs[i3].z > vs[i3].w))
                 continue;
-            // Back-Face Culling
-            // Use the clip-space vertices to cull back-faces and only draw front-faces
+
+            // BackFace or FrontFace Culling
             float C =   -vs[i1].x*(vs[i2].y*vs[i3].z - vs[i3].y*vs[i2].z)
                         -vs[i2].x*(vs[i3].y*vs[i1].z - vs[i1].y*vs[i3].z)
                         -vs[i3].x*(vs[i1].y*vs[i2].z - vs[i2].y*vs[i1].z);
             // Triangle is back-face if normal of triangle has z-component(C) >= 0 (Anticlockwise is FrontFace)
-            if (backface?C > 0:C < 0)
+            if (backfaceVisible?C > 0:C < 0)
                DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
         }
         delete[] points;
@@ -128,6 +126,19 @@ public:
             m_depthBuffers[m_depthBufferId][j*m_width+i] = 1.0f; // Clear the depth buffer
     }
 
+    struct
+    {
+        mat4 
+            mvp,            // Model-View-Projection composite matrix
+            model,          // Model matrix
+            bias_light_mvp; // Texture matrix == Model-View-Projection matrix for light space combined with bias matrix
+    } transforms;
+    
+    struct
+    {
+        vec3 lightDirection;
+    } lights;
+
 private:
     uint32_t* m_framebuffer;
     int m_width, m_height;
@@ -146,15 +157,15 @@ private:
 
 // A class to store shaders
 // Shaders are stored as template arguments, which
-// means compile time optimization
+// MIGHT help compile time optimization
 template<Renderer& renderer, class VertexType, int NoOfAttributes,
-        vec4(*vertexShader)(vec4[], const VertexType&), void(*fragmentShader)(Point<NoOfAttributes>&), bool backface=false>
+        vec4(*vertexShader)(vec4[], const VertexType&), void(*fragmentShader)(Point<NoOfAttributes>&), bool backfaceVisible=false>
 class Shaders
 {
 public:
     void DrawTriangles(std::vector<VertexType>& vertices, std::vector<uint16_t>& indices)
     {
-        renderer.DrawTriangles(vertexShader, fragmentShader, &vertices[0], vertices.size(), &indices[0], indices.size()/3, backface);
+        renderer.DrawTriangles(vertexShader, fragmentShader, &vertices[0], vertices.size(), &indices[0], indices.size()/3, backfaceVisible);
     }
 };
 
