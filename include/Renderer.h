@@ -3,8 +3,8 @@
 #include "Rasterizer.h"
 #include "Timer.h"
 
-// Renderer responsible for drawing pixels and triangles
-// and managing the window
+// Renderer responsible for managing the window
+//  and drawing pixels and triangles
 class Renderer
 {
 public:
@@ -31,12 +31,11 @@ public:
     void SetUpdateCallback(std::function<void(double)> updateCallback) { m_update = updateCallback; }
     void SetResizeCallback(std::function<void(int, int)> resizeCallback) { m_resize = resizeCallback; }
 
-    // Draw a triangle from 3 vertices; the points are pixel points and the function
-    //  is fragment shader called for each intermediate pixels
+    // Draw a triangle from from pixel points
     template<int N>
-    void DrawTriangle(Point<N> &pt1, Point<N> &pt2, Point<N> &pt3, void (*f)(Point<N>&))
+    void DrawTriangle(Point<N> &pt1, Point<N> &pt2, Point<N> &pt3, void (*fragmentShader)(Point<N>&))
     {
-        Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, f, m_width, m_height, m_depthBuffer); 
+        Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, fragmentShader, m_width, m_height, m_depthBuffer); 
     }
     
     // Draw triangles with given vertices and indices
@@ -45,8 +44,8 @@ public:
     template<int N, class Args>
     void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, size_t numVertices, uint16_t* indexBuffer, size_t numTriangles)
     {
-        vec4* vs = new vec4[numVertices];                // array to carry the clip-space vertices after passed through vertexBuffer
-        Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and varyings for each vertex
+        vec4* vs = new vec4[numVertices];                // array to carry the clip-space vertices returned by vertexBuffer
+        Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and their attributes
 
         ProcessVertices(points, vs, vertexShader, vertexBuffer, numVertices);
         // Draw each triangle
@@ -66,8 +65,8 @@ public:
             float C =   -vs[i1].x*(vs[i2].y*vs[i3].z - vs[i3].y*vs[i2].z)
                         -vs[i2].x*(vs[i3].y*vs[i1].z - vs[i1].y*vs[i3].z)
                         -vs[i3].x*(vs[i1].y*vs[i2].z - vs[i2].y*vs[i1].z);
-            // Triangle is back-face if normal of triangle has z-component(C) <= 0
-            if (C > 0)  
+            // Triangle is back-face if normal of triangle has z-component(C) >= 0 (Anticlockwise is FrontFace)
+            if (C < 0)  
                DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
         }
         delete[] points;
@@ -75,15 +74,17 @@ public:
     }
         
     // Process each vertex through vertexShader and
-    // fill 'newVertices' with resulting clip-space vertices
-    // and 'points' with corresponding window-space vertices as well as varyings
+    //  fill 'newVertices' with resulting clip-space vertices
+    //  and 'points' with corresponding window-space points and their attributes
     template<int N, class Args>
     void ProcessVertices(Point<N>*points, vec4* newVertices, vec4(*f)(vec4[], const Args&), Args* args, size_t numVertices)
     {
         vec3 v;
         for (size_t i=0; i<numVertices; ++i)
         {
-            newVertices[i] = f(points[i].varying, args[i]);
+            newVertices[i] = f(points[i].attribute, args[i]);
+            for (int j=0; j<N; ++j)
+                points[i].attribute[j] = points[i].attribute[j];
             v = newVertices[i].ConvertToVec3();
             v.x = (v.x + 1.0f) / 2*m_width;
             v.y = (-v.y + 1.0f) / 2*m_height;
@@ -104,7 +105,7 @@ private:
     SDL_Window* m_window;
     SDL_Surface* m_screen;
     float* m_depthBuffer;
-    
+
     // Clear the color-buffer and the depth-buffer
     void Clear()
     {
@@ -112,7 +113,7 @@ private:
         for (int j = 0; j < m_height; ++j)
         {
             PutPixelUnsafe(i, j, m_clearColor); // Clear the color buffer
-            m_depthBuffer[j*m_height+i] = 1.0f; // Clear the depth buffer
+            m_depthBuffer[i*m_height+j] = 1.0f; // Clear the depth buffer
         }
     }
 
@@ -121,3 +122,19 @@ private:
     std::function<void(int, int)> m_resize;
     RGBColor m_clearColor;
 };
+
+// A class to store shaders
+// Shaders are stored as template arguments, which
+// means compile time optimization
+template<Renderer& renderer, class VertexType, int NoOfAttributes,
+        vec4(*vertexShader)(vec4[], const VertexType&), void(*fragmentShader)(Point<NoOfAttributes>&)>
+class Shaders
+{
+public:
+    void DrawTriangles(std::vector<VertexType>& vertices, std::vector<uint16_t>& indices)
+    {
+        renderer.DrawTriangles(vertexShader, fragmentShader, &vertices[0], vertices.size(), &indices[0], indices.size()/3);
+    }
+};
+
+

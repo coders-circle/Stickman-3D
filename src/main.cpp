@@ -1,114 +1,59 @@
 #include <common.h>
 #include <Renderer.h>
 #include <transform.h>
-#include <Bitmap.h>
+#include <TextureManager.h>
+#include <Mesh.h>
 
 Renderer g_renderer;
-Bitmap bmp;
-// Transformations
+TextureManager g_textureManager;
+Mesh g_mesh;
+
+
 mat4 transform, model, persp;
+size_t texId;
 
-// This struct is input to the vertex shader
-struct Vertex
+// VertexShader is called for each vertex and is expected to return its
+//  position in clip space as well as its attributes
+vec4 VertexShader(vec4 attribute[], const Vertex& vertex)
 {
-    vec3 v;
-    vec3 n;
-    vec2 uv;
-};
-
-
-// VertexShader is called for each vertex and is expected to return
-//  position of vertex in clip space and the varying attributes
-// The varyings are attributes that vary for each pixel
-//  These attributes are interpolated for intermediate pixels between the vertices
-//  The number of varying depends on the input of the FragmentShader 
-//  used with this VertexShader
-vec4 VertexShader(vec4 varying[], const Vertex& vertex)
-{
-    vec4 p = transform * vec4(vertex.v);        // Transform the vertex by composite ModelViewProjection matrix
-    varying[0] = mat3(model) * vertex.n;              // Transform the normal by model matrix
-    varying[1] = vertex.uv;
-    return p;                                   // Return the position of the vertex in clip-space
+    vec4 p = transform * vec4(vertex.position);
+    attribute[0] = mat3(model) * vertex.normal;
+    attribute[1] = vertex.texcoords;
+    return p;
 }
 
-// Point<N> for point with N-varying attributes
 // This function is called for each pixel
 // The Point contains x,y position of the pixel,
-// the depth value and the interpolated varying attributes
+//  the depth value and the interpolated attributes
 void FragmentShader(Point<2>& point)
 {
-    vec3 n = point.varying[0];  // Take in the interpolated normal
-    n.Normalize();              //  and normalize it
+    vec3 n = point.attribute[0];
+    n.Normalize();
+    vec3 c = g_textureManager.GetTexture(texId).Sample(point.attribute[1]);
         
-    vec3 c = bmp.Sample(point.varying[1]);   // Get color by sampling the bitmap    
-
     // Perform a simple phong based lighting calculation for directional light
     vec3 dir(-1,0,-1);                   
     dir.Normalize();
-    float intensity = Min(Max(n.dot(-dir), 0.0f) + 0.05f, 1.0f);
+    float intensity = Min(Max(n.dot(-dir), 0.0f) + 0.09f, 1.0f);
     c = c*intensity;    // "Light" the color
     
     g_renderer.PutPixel(point.pos[0], point.pos[1], c);     // Use the calculated color to plot the pixel
 }
 
-// Vertex Buffer (CUBE)
-Vertex vertices[] = 
-{
-    // FRONT
-    { vec3(-0.5f,  0.5f,  0.5f), vec3( 0,  0,  1), vec2(0.0f, 0.0f) },
-    { vec3( 0.5f,  0.5f,  0.5f), vec3( 0,  0,  1), vec2(1.0f, 0.0f) },
-    { vec3(-0.5f, -0.5f,  0.5f), vec3( 0,  0,  1), vec2(0.0f, 1.0f) },
-    { vec3( 0.5f, -0.5f,  0.5f), vec3( 0,  0,  1), vec2(1.0f, 1.0f) },
-    // RIGHT                           
-    { vec3( 0.5f,  0.5f,  0.5f), vec3( 1,  0,  0), vec2(0.0f, 0.0f) },
-    { vec3( 0.5f,  0.5f, -0.5f), vec3( 1,  0,  0), vec2(1.0f, 0.0f) },
-    { vec3( 0.5f, -0.5f,  0.5f), vec3( 1,  0,  0), vec2(0.0f, 1.0f) },
-    { vec3( 0.5f, -0.5f, -0.5f), vec3( 1,  0,  0), vec2(1.0f, 1.0f) },
-    // LEFT
-    { vec3(-0.5f,  0.5f, -0.5f), vec3(-1,  0,  0), vec2(0.0f, 0.0f) },
-    { vec3(-0.5f,  0.5f,  0.5f), vec3(-1,  0,  0), vec2(1.0f, 0.0f) },
-    { vec3(-0.5f, -0.5f, -0.5f), vec3(-1,  0,  0), vec2(0.0f, 1.0f) },
-    { vec3(-0.5f, -0.5f,  0.5f), vec3(-1,  0,  0), vec2(1.0f, 1.0f) },
-    // TOP
-    { vec3(-0.5f,  0.5f, -0.5f), vec3( 0,  1,  0), vec2(0.0f, 0.0f) },
-    { vec3( 0.5f,  0.5f, -0.5f), vec3( 0,  1,  0), vec2(1.0f, 0.0f) },
-    { vec3(-0.5f,  0.5f,  0.5f), vec3( 0,  1,  0), vec2(0.0f, 1.0f) },
-    { vec3( 0.5f,  0.5f,  0.5f), vec3( 0,  1,  0), vec2(1.0f, 1.0f) },
-    // BOTTOM
-    { vec3(-0.5f, -0.5f,  0.5f), vec3( 0, -1,  0), vec2(0.0f, 0.0f) },
-    { vec3( 0.5f, -0.5f,  0.5f), vec3( 0, -1,  0), vec2(1.0f, 0.0f) },
-    { vec3(-0.5f, -0.5f, -0.5f), vec3( 0, -1,  0), vec2(0.0f, 1.0f)},
-    { vec3( 0.5f, -0.5f, -0.5f), vec3( 0, -1,  0), vec2(1.0f, 1.0f) },
-    // BACK
-    { vec3( 0.5f,  0.5f, -0.5f), vec3( 0,  0, -1), vec2(0.0f, 0.0f) },
-    { vec3(-0.5f,  0.5f, -0.5f), vec3( 0,  0, -1), vec2(1.0f, 0.0f) },
-    { vec3( 0.5f, -0.5f, -0.5f), vec3( 0,  0, -1), vec2(0.0f, 1.0f) },
-    { vec3(-0.5f, -0.5f, -0.5f), vec3( 0,  0, -1), vec2(1.0f, 1.0f) },
-};
+auto shaders = 
+//              Shaders<Renderer&, VertexClass, NumberOfAttributes, VertexShaderFunction, FragmentShaderFunction>
+                Shaders<g_renderer, Vertex, 2, &VertexShader, &FragmentShader>();
 
-// Index Buffer (CUBE)
-uint16_t indices[] = 
-{
-    0, 1, 3, 0, 3, 2,
-    4, 5, 7, 4, 7, 6,
-    8, 9, 11, 8, 11, 10,
-    12, 13, 15, 12, 15, 14,
-    16, 17, 19, 16, 19, 18,
-    20, 21, 23, 20, 23, 22
-};
-
-
-// angle of rotation of the object
-float angle=45.0f*3.1415/180.0f;
+float angle=45.0f*3.1415f/180.0f;
+mat4 Rotate = RotateX(-90*3.1415f/180.0f);
+// Render objects
 void Render()
 {
-    // Before rendering, store the model and composite ModelViewProjection matrices
-    // so that vertex shader may use these
-    model = Translate(vec3(0,0,-3))*RotateY(angle);
+    model = Translate(vec3(0,-1,-3))*RotateY(angle)*Rotate*Scale(0.25f);
     transform = persp * model;  
 
-    // Draw the triangles with given vertices, indices, VertexShader and FragmentShader
-    g_renderer.DrawTriangles(&VertexShader, &FragmentShader, vertices, 24, indices, 12);
+    texId = g_mesh.GetTextureId();
+    g_mesh.Draw(shaders);
 }
 
 // On resize of window, we calculate the projection matrix
@@ -136,8 +81,12 @@ int main()
     g_renderer.SetUpdateCallback(&Update);
     g_renderer.SetResizeCallback(&Resize);
     
-    // Load the bitmap
-    bmp.LoadFile("grass_T.bmp");
+    // And create the mesh
+    //g_mesh.LoadBox(0.5f, 0.5f, 0.5f);
+    //g_mesh.LoadSphere(0.5f, 42, 42);
+    g_mesh.LoadFile("test.dat");
+    // Load the texture
+//    g_mesh.SetTextureId(g_textureManager.AddTexture("grass_T.bmp"));
     
     // Call resize once to initialize the projection matrix
     Resize(g_renderer.GetWidth(), g_renderer.GetHeight());

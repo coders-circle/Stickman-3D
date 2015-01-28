@@ -5,7 +5,8 @@
 class Bitmap
 {
 public:
-    void LoadFile(const std::string filename)
+    // Load a bitmap file
+    void LoadFile(const std::string& filename)
     {
         std::fstream file;
         file.open(filename, std::ios::in | std::ios::binary);
@@ -34,7 +35,8 @@ public:
         else
             std::cout << "Couldn't load texture: " << filename << std::endl;
     }
-
+    
+    // Sample at given texture coordinates
     const RGBColor& Sample(float u, float v)
     {
         uint32_t x = u*(width-1);
@@ -43,12 +45,13 @@ public:
         y = Min(y, height-1);
         return pixels[y*width + x];
     }
+    // Sample at given texture coordinates
     const RGBColor& Sample(const vec2& v)
     {
         return Sample(v.u, v.v);
     }
 
-    uint32_t width, height;
-    std::vector<RGBColor> pixels;
+    uint32_t width/*width of bitmap*/, height/*height of bitmap*/;
+    std::vector<RGBColor> pixels;   // array of pixels representing the image
 
 };
