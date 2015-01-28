@@ -39,8 +39,8 @@ public:
     // Sample at given texture coordinates
     const RGBColor& Sample(float u, float v)
     {
-        uint32_t x = u*(width-1);
-        uint32_t y = v*(height-1);
+        uint32_t x = uint32_t(u*((float)width-1));
+        uint32_t y = uint32_t(v*((float)height-1));
         x = Min(x, width-1);
         y = Min(y, height-1);
         return pixels[y*width + x];

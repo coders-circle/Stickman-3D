@@ -2,6 +2,7 @@
 #include "matrix.h"
 #include "Timer.h"
 #include "Rasterizer.h"
+#include <RenderThreadManager.h>
 
 // Renderer responsible for managing the window
 //  and drawing pixels and triangles
@@ -48,28 +49,7 @@ public:
         Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and their attributes
 
         ProcessVertices(points, vs, vertexShader, vertexBuffer, numVertices);
-        // Draw each triangle
-        for (size_t i=0; i<numTriangles; ++i)
-        {
-            size_t i1 = indexBuffer[i*3], i2 = indexBuffer[i*3+1], i3 = indexBuffer[i*3+2];
-
-            // Clip-Space clipping
-            if ((vs[i1].x < -vs[i1].w && vs[i2].x < -vs[i2].w && vs[i3].x < -vs[i3].w) ||
-                (vs[i1].y < -vs[i1].w && vs[i2].y < -vs[i2].w && vs[i3].y < -vs[i3].w) ||
-                (vs[i1].z < -vs[i1].w && vs[i2].z < -vs[i2].w && vs[i3].z < -vs[i3].w) ||
-                (vs[i1].x > vs[i1].w && vs[i2].x > vs[i2].w && vs[i3].x > vs[i3].w) ||
-                (vs[i1].y > vs[i1].w && vs[i2].y > vs[i2].w && vs[i3].y > vs[i3].w) ||
-                (vs[i1].z > vs[i1].w && vs[i2].z > vs[i2].w && vs[i3].z > vs[i3].w))
-                continue;
-
-            // BackFace or FrontFace Culling
-            float C =   -vs[i1].x*(vs[i2].y*vs[i3].z - vs[i3].y*vs[i2].z)
-                        -vs[i2].x*(vs[i3].y*vs[i1].z - vs[i1].y*vs[i3].z)
-                        -vs[i3].x*(vs[i1].y*vs[i2].z - vs[i2].y*vs[i1].z);
-            // Triangle is back-face if normal of triangle has z-component(C) >= 0 (Anticlockwise is FrontFace)
-            if (backfaceVisible?C > 0:C < 0)
-               DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
-        }
+        m_threader.DrawTrianglesThreaded(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
         delete[] points;
         delete[] vs;
     }
@@ -153,6 +133,8 @@ private:
     std::function<void(double)> m_update;
     std::function<void(int, int)> m_resize;
     RGBColor m_clearColor;
+
+    RenderThreadManager m_threader;
 };
 
 // A class to store shaders
@@ -169,3 +151,30 @@ public:
     }
 };
 
+template<int N>
+inline void RenderThreadManager::DrawTriangles(void(*fragmentShader)(Point<N>&), uint16_t* indexBuffer, size_t numTriangles, bool backfaceVisible,
+                    vec4* vs, Point<N>* points, int offset)
+{
+    indexBuffer += offset*3;
+    for (size_t i=0; i<numTriangles; ++i)
+    {
+        size_t i1 = indexBuffer[i*3], i2 = indexBuffer[i*3+1], i3 = indexBuffer[i*3+2];
+
+        // Clip-Space clipping
+        if ((vs[i1].x < -vs[i1].w && vs[i2].x < -vs[i2].w && vs[i3].x < -vs[i3].w) ||
+            (vs[i1].y < -vs[i1].w && vs[i2].y < -vs[i2].w && vs[i3].y < -vs[i3].w) ||
+            (vs[i1].z < -vs[i1].w && vs[i2].z < -vs[i2].w && vs[i3].z < -vs[i3].w) ||
+            (vs[i1].x > vs[i1].w && vs[i2].x > vs[i2].w && vs[i3].x > vs[i3].w) ||
+            (vs[i1].y > vs[i1].w && vs[i2].y > vs[i2].w && vs[i3].y > vs[i3].w) ||
+            (vs[i1].z > vs[i1].w && vs[i2].z > vs[i2].w && vs[i3].z > vs[i3].w))
+            continue;
+
+        // BackFace or FrontFace Culling
+        float C =   -vs[i1].x*(vs[i2].y*vs[i3].z - vs[i3].y*vs[i2].z)
+                    -vs[i2].x*(vs[i3].y*vs[i1].z - vs[i1].y*vs[i3].z)
+                    -vs[i3].x*(vs[i1].y*vs[i2].z - vs[i2].y*vs[i1].z);
+        // Triangle is back-face if normal of triangle has z-component(C) >= 0 (Anticlockwise is FrontFace)
+        if (backfaceVisible?C > 0:C < 0)
+           renderer->DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
+    }
+}

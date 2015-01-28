@@ -168,7 +168,7 @@ public:
 
     operator RGBColor() const
     {
-        return RGBColor(r*255, g*255, b*255);
+        return RGBColor(uint8_t(r*255), uint8_t(g*255), uint8_t(b*255));
     }
 };
 

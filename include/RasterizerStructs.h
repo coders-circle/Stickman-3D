@@ -14,8 +14,8 @@ public:
     }
     void FromVec4(const vec4& v)
     {
-        pos[0] = v.x;
-        pos[1] = v.y;
+        pos[0] = (int)v.x;
+        pos[1] = (int)v.y;
         d = v.z;
         w = 1.0f/v.w;
     }

@@ -111,12 +111,12 @@ void Mesh<T>::LoadSphere(float radius, uint16_t rings, uint16_t sectors)
     for (r=0; r<rings-1; ++r)
         for (s=0; s<sectors-1; ++s)
         {
-            *id++ = r*sectors + s;
-            *id++ = r*sectors + s+1;
-            *id++ = (r+1)*sectors + s+1;
-            *id++ = r*sectors + s;
-            *id++ = (r+1)*sectors + s+1;
-            *id++ = (r+1)*sectors + s;
+            *id++ = uint16_t(r*sectors + s);
+            *id++ = uint16_t(r*sectors + s+1);
+            *id++ = uint16_t((r+1)*sectors + s+1);
+            *id++ = uint16_t(r*sectors + s);
+            *id++ = uint16_t((r+1)*sectors + s+1);
+            *id++ = uint16_t((r+1)*sectors + s);
         }
     
 }
