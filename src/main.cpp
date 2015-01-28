@@ -119,6 +119,9 @@ int main()
     g_meshes[1].material.depthBias = 0.0f;//-0.000005f;
     g_meshes[2].material.depthBias = 0.008f;
     
+
+    mat4 m1(1.0f);
+    std::cout << m1.Transpose() << std::endl;
     
     // Call resize once to initialize the view and projection matrices
     Resize(g_renderer.GetWidth(), g_renderer.GetHeight());

@@ -49,7 +49,8 @@ public:
         Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and their attributes
 
         ProcessVertices(points, vs, vertexShader, vertexBuffer, numVertices);
-        m_threader.DrawTrianglesThreaded(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
+        m_threader.DrawTriangles(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
+        //m_threader.DrawTrianglesThreaded(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
         delete[] points;
         delete[] vs;
     }
