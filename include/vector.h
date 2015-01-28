@@ -63,7 +63,7 @@ public:
     {
         return vec2(-x, -y);
     }
-    float dot(const vec2 &other) const
+    float Dot(const vec2 &other) const
     {
         return x*other.x + y*other.y;
     }
@@ -82,6 +82,11 @@ public:
     void Normalize()
     {
         float l = Length();
+        if (l==0)
+        {
+            x = 1; y = 0;
+            return;
+        }
         x /= l;
         y /= l;
     }
@@ -107,19 +112,19 @@ public:
     }
     vec3 operator-(const vec3 &other) const
     {
-        return vec3(r-other.r, g-other.g, b-other.b);
+        return vec3(x-other.x, y-other.y, z-other.z);
     }
-    float dot(const vec3 &other) const
+    float Dot(const vec3 &other) const
     {
         return x*other.x + y*other.y + z*other.z;
     }
     vec3 operator*(float p) const
     {
-        return vec3(r*p, g*p, b*p);
+        return vec3(x*p, y*p, z*p);
     }
     vec3 operator/(float p) const
     {
-        return vec3(r/p, g/p, b/p);
+        return vec3(x/p, y/p, z/p);
     }
     vec3 operator -() const 
     {
@@ -140,9 +145,19 @@ public:
     void Normalize()
     {
         float l = Length();
+        if (l==0)
+        {
+            x=1;y=0;z=0;
+            return;
+        }
         x /= l;
         y /= l;
         z /= l;
+    }
+
+    vec3 Cross(const vec3& v) const
+    {
+        return vec3(y*v.z - v.y*z, z*v.x - v.z*x, x*v.y - v.x*y);
     }
 
     operator vec2() const
@@ -186,7 +201,7 @@ public:
     {
         return vec4(x/p, y/p, z/p, w/p);
     }
-    float dot(const vec4 &other) const
+    float Dot(const vec4 &other) const
     {
         return x*other.x + y*other.y + z*other.z + w*other.w;
     }
@@ -221,6 +236,11 @@ public:
     void Normalize()
     {
         float l = Length();
+        if (l==0)
+        {
+            x=0;y=0;z=0;w=1;
+            return;
+        }
         x /= l;
         y /= l;
         z /= l;

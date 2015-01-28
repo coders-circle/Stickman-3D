@@ -111,7 +111,7 @@ public:
         (*this)[0] = vec4(f, 0.0f, 0.0f, 0.0f);
         (*this)[1] = vec4(0.0f, f, 0.0f, 0.0f);
         (*this)[2] = vec4(0.0f, 0.0f, f, 0.0f);
-        (*this)[2] = vec4(0.0f, 0.0f, 0.0f, f);
+        (*this)[3] = vec4(0.0f, 0.0f, 0.0f, f);
     }
     mat4(float m11, float m12, float m13, float m14,
          float m21, float m22, float m23, float m24,

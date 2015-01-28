@@ -1,11 +1,9 @@
 #include <common.h>
 #include <Mesh.h>
+#include <materials.h>
 
-Mesh::Mesh()
- : m_textureId(0)
-{}
-
-void Mesh::LoadFile(const std::string &filename)
+template<class T>
+void Mesh<T>::LoadFile(const std::string &filename)
 {
     std::fstream file;
     file.open(filename, std::ios::binary | std::ios::in);
@@ -26,7 +24,8 @@ void Mesh::LoadFile(const std::string &filename)
     file.read((char*)&m_indices[0], nindices*sizeof(uint16_t));
 }
 
-void Mesh::LoadBox(float x, float y, float z)
+template<class T>
+void Mesh<T>::LoadBox(float x, float y, float z)
 {
     m_vertices.resize(24);
     m_vertices = std::vector<Vertex>
@@ -36,7 +35,7 @@ void Mesh::LoadBox(float x, float y, float z)
         { vec3(-x,  y,  z), vec3( 0,  0,  1), vec2(0.0f, 0.0f) },
         { vec3( x, -y,  z), vec3( 0,  0,  1), vec2(1.0f, 1.0f) },
         { vec3(-x, -y,  z), vec3( 0,  0,  1), vec2(0.0f, 1.0f) },
-        // RIGHTx   y   z         
+        // RIGHT
         { vec3( x,  y, -z), vec3( 1,  0,  0), vec2(1.0f, 0.0f) },
         { vec3( x,  y,  z), vec3( 1,  0,  0), vec2(0.0f, 0.0f) },
         { vec3( x, -y, -z), vec3( 1,  0,  0), vec2(1.0f, 1.0f) },
@@ -51,7 +50,7 @@ void Mesh::LoadBox(float x, float y, float z)
         { vec3(-x,  y, -z), vec3( 0,  1,  0), vec2(0.0f, 0.0f) },
         { vec3( x,  y,  z), vec3( 0,  1,  0), vec2(1.0f, 1.0f) },
         { vec3(-x,  y,  z), vec3( 0,  1,  0), vec2(0.0f, 1.0f) },
-        // BOTTOx
+        // BOTTOM
         { vec3( x, -y,  z), vec3( 0, -1,  0), vec2(1.0f, 0.0f) },
         { vec3(-x, -y,  z), vec3( 0, -1,  0), vec2(0.0f, 0.0f) },
         { vec3( x, -y, -z), vec3( 0, -1,  0), vec2(1.0f, 1.0f) },
@@ -75,7 +74,8 @@ void Mesh::LoadBox(float x, float y, float z)
     });
 }
 
-void Mesh::LoadSphere(float radius, uint16_t rings, uint16_t sectors)
+template<class T>
+void Mesh<T>::LoadSphere(float radius, uint16_t rings, uint16_t sectors)
 {
     float R = 1.0f / float(rings-1);
     float S = 1.0f / float(sectors-1);
@@ -120,3 +120,6 @@ void Mesh::LoadSphere(float radius, uint16_t rings, uint16_t sectors)
         }
     
 }
+
+// Instantiation with each material class to avoid linking issues
+template class Mesh<TextureShadowMaterial>;

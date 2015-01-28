@@ -51,35 +51,41 @@ public:
 
 private:
     template<int N>
-    static void DrawSpans(Pair<N> &p, void(*f)(Point<N>&), int w, int h, float* depthBuffer)
+    static void DrawSpans(Pair<N> &p, void(*f)(Point<N>&), int width, int height, float* depthBuffer)
     {
         Point<N> point;
         float xdiff;
+        int start;
 
-        float dincr; vec4 attrs_incr[N];
+        float dincr; vec4 attrs_incr[N+1], attrs_tmp[N+1];
+        float w, wincr;
         while (true)
         {
             int y = p.e1->y;
-            if (y >= h)         // Clipping when y >= height
+            if (y >= height)         // Clipping when y >= height
                 return;
             if (y >= 0)         // Clipping when y < 0
             {
                 int x1 = p.e1->x;
                 int x2 = p.e2->x;
-                if (x1 < w && x2 >= 0)      // Clipping when x > width or x < 0
+                if (x1 < width && x2 >= 0)      // Clipping when x > width or x < 0
                 {
                     x1 = Max(x1, 0);        // Further clipping
-                    x2 = Min(x2, w);
+                    x2 = Min(x2, width);
 
                     point.pos[1] = y;
                     xdiff = p.e2->x - p.e1->x;
+                    start = x1 - p.e1->x;
 
                     dincr = (p.e2->d - p.e1->d)/float(xdiff);
-                    point.d = p.e1->d;
+                    point.d = p.e1->d + start*dincr;
+                    wincr = (p.e2->w - p.e1->w)/float(xdiff);
+                    w = p.e1->w + start*wincr;
                     for (int i=0; i<N; ++i)
                     {
                         attrs_incr[i] = (p.e2->attrs[i] - p.e1->attrs[i])/float(xdiff);
-                        point.attribute[i] = p.e1->attrs[i];
+                        attrs_tmp[i] = p.e1->attrs[i] + attrs_incr[i] * start;
+                        point.attribute[i] = attrs_tmp[i]/w;
                     }
 
                     for (point.pos[0] = x1; point.pos[0] <= x2; ++point.pos[0])
@@ -88,7 +94,7 @@ private:
                         if (point.d > 0)
                         {
                             // Depth test
-                            float& depth = depthBuffer[point.pos[1]*w+point.pos[0]];
+                            float& depth = depthBuffer[point.pos[1]*width+point.pos[0]];
                             if (point.d < depth)
                             {
                                 depth = point.d;
@@ -98,8 +104,12 @@ private:
                         }   
                         // Increment the depth and attributes
                         point.d += dincr;
+                        w += wincr;
                         for (int i=0; i<N; ++i)
-                            point.attribute[i] = point.attribute[i] + attrs_incr[i];
+                        {
+                            attrs_tmp[i] = attrs_tmp[i] + attrs_incr[i];
+                            point.attribute[i] = attrs_tmp[i]/w;
+                        }
                     }
                 }
             }

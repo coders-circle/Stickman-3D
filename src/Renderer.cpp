@@ -1,13 +1,13 @@
 #include <common.h>
 #include <Renderer.h>
 
-Renderer::Renderer() : m_timer(/*60.0*/300.0), m_depthBuffer(NULL) 
+Renderer::Renderer() : m_timer(/*60.0*/300.0) 
 {}
 
 Renderer::~Renderer()
 {
-    if (m_depthBuffer)
-        delete[] m_depthBuffer;
+    for (size_t i=0; i<m_depthBuffers.size(); ++i)
+        delete[] m_depthBuffers[i];
 }
 
 
@@ -21,7 +21,8 @@ void Renderer::Initialize(const char* title, int x, int y, int width, int height
     m_width = m_screen->w;
     m_height = m_screen->h;
 
-    m_depthBuffer = new float[m_width*m_height];
+    m_depthBuffers.push_back(new float[m_width*m_height]);
+    m_depthBufferId = 0;
 }
 
 void Renderer::MainLoop()
@@ -39,7 +40,6 @@ void Renderer::MainLoop()
         }
 
         SDL_LockSurface(m_screen);
-        Clear();
 
         std::string title = "FPS: " + std::to_string(m_timer.GetFPS());
         SDL_SetWindowTitle(m_window, title.c_str());
@@ -61,11 +61,10 @@ void Renderer::CleanUp()
     SDL_DestroyWindow(m_window);
     SDL_Quit();
 
-    if (m_depthBuffer)
-    {
-        delete[] m_depthBuffer;
-        m_depthBuffer = NULL;
-    }
+    for (size_t i=0; i<m_depthBuffers.size(); ++i)
+        delete[] m_depthBuffers[i];
+    m_depthBuffers.clear();
+
 }
 
  

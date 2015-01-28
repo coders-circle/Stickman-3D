@@ -7,7 +7,7 @@ OBJ_DIR := obj
 BIN_DIR := bin
 
 ## List of all c++ files to compile
-CPP_FILES := $(wildcard $(SRC_DIR)/*.cpp)
+CPP_FILES := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/shaders/*.cpp)
 
 ## List of all object files to generate
 OBJ_FILES := $(addprefix $(OBJ_DIR)/,$(CPP_FILES:$(SRC_DIR)/%.cpp=%.o))
@@ -16,7 +16,7 @@ OBJ_FILES := $(addprefix $(OBJ_DIR)/,$(CPP_FILES:$(SRC_DIR)/%.cpp=%.o))
 CXX := g++
 CXXLIBS := 
 LDLIBS := -lSDL2
-CXXFLAGS := -I $(INC_DIR) -std=c++11 -MMD $(CXXLIBS) -O3
+CXXFLAGS := -I $(INC_DIR) -std=c++11 -MMD $(CXXLIBS) -Ofast -msse3 -mmmx
 LDFLAGS := --std=c++11 $(LDLIBS)
 
 ## Build the application
