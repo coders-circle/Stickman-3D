@@ -1,7 +1,7 @@
 #include <common.h>
 #include <Renderer.h>
 
-Renderer::Renderer() : m_timer(/*60.0*/300.0) 
+Renderer::Renderer() : m_timer(/*60.0*/300.0)
 {}
 
 Renderer::~Renderer()
