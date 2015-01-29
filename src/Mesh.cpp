@@ -1,9 +1,7 @@
 #include <common.h>
 #include <Mesh.h>
-#include <materials.h>
 
-template<class T>
-void Mesh<T>::LoadFile(const std::string &filename)
+void Mesh::LoadFile(const std::string &filename)
 {
     std::fstream file;
     file.open(filename, std::ios::binary | std::ios::in);
@@ -24,8 +22,7 @@ void Mesh<T>::LoadFile(const std::string &filename)
     file.read((char*)&m_indices[0], nindices*sizeof(uint16_t));
 }
 
-template<class T>
-void Mesh<T>::LoadBox(float x, float y, float z)
+void Mesh::LoadBox(float x, float y, float z)
 {
     m_vertices.resize(24);
     m_vertices = std::vector<Vertex>
@@ -74,8 +71,7 @@ void Mesh<T>::LoadBox(float x, float y, float z)
     });
 }
 
-template<class T>
-void Mesh<T>::LoadSphere(float radius, uint16_t rings, uint16_t sectors)
+void Mesh::LoadSphere(float radius, uint16_t rings, uint16_t sectors)
 {
     float R = 1.0f / float(rings-1);
     float S = 1.0f / float(sectors-1);
@@ -122,4 +118,4 @@ void Mesh<T>::LoadSphere(float radius, uint16_t rings, uint16_t sectors)
 }
 
 // Instantiation with each material class to avoid linking issues
-template class Mesh<TextureShadowMaterial>;
+//template class Mesh<TextureShadowMaterial>;

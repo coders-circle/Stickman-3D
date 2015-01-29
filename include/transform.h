@@ -51,6 +51,26 @@ inline mat4 RotateX(float angle)
     );
 }
 
+inline mat4 RotateZ(float angle)
+{
+    return mat4(
+        cosf(angle), -sinf(angle), 0, 0,
+        sinf(angle), cosf(angle), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    );
+}
+
+inline mat4 EulerXYZ(const vec3& v)
+{
+    return RotateZ(v.z) * RotateY(v.y) * RotateX(v.x);
+}
+
+inline mat4 EulerZYX(const vec3& v)
+{
+    return RotateX(v.x) * RotateY(v.y) * RotateZ(v.z);
+}
+
 inline mat4 LookAt(const vec3& eye, const vec3& target, const vec3& up)
 {
     vec3 zaxis = eye-target;

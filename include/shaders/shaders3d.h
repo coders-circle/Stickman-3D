@@ -10,6 +10,7 @@ public:
     {
         float depthBias;
         size_t textureId;
+        vec3 diffuseColor;
     };
     static Uniforms uniforms;
 
@@ -51,6 +52,7 @@ public:
         vec3 n = point.attribute[0];
         n.Normalize();
         vec3 c = g_textureManager.GetTexture(uniforms.textureId).Sample(point.attribute[1]);
+        c = c * uniforms.diffuseColor;
         
         // Light space position of pixel
         vec3 lpos = point.attribute[2];
@@ -62,8 +64,6 @@ public:
             for (float j=-1.5f; j<=1.5f; j+=1.5f)
                 if (GetSample(lpos.x + i, lpos.y +j) < lpos.z - uniforms.depthBias)
                     visibility -= 0.06f;
-        //visibility = Max(0.0f, visibility);
-        
         c = c * visibility;
     
         // Perform a simple phong based lighting calculation for directional light

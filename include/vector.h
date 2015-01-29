@@ -123,6 +123,10 @@ public:
     {
         return vec3(x*p, y*p, z*p);
     }
+    vec3 operator*(const vec3& v) const
+    {
+        return vec3(x*v.x, y*v.y, z*v.z);
+    }
     vec3 operator/(float p) const
     {
         return vec3(x/p, y/p, z/p);
