@@ -171,10 +171,10 @@ inline void RenderThreadManager::DrawTriangles(void(*fragmentShader)(Point<N>&),
             continue;
 
         // BackFace or FrontFace Culling
-        float C =   -vs[i1].x*(vs[i2].y*vs[i3].z - vs[i3].y*vs[i2].z)
-                    -vs[i2].x*(vs[i3].y*vs[i1].z - vs[i1].y*vs[i3].z)
-                    -vs[i3].x*(vs[i1].y*vs[i2].z - vs[i2].y*vs[i1].z);
-        // Triangle is back-face if normal of triangle has z-component(C) >= 0 (Anticlockwise is FrontFace)
+        int C =    points[i1].x*(points[i2].y-points[i3].y) +
+                   points[i2].x*(points[i3].y-points[i1].y) +
+                   points[i3].x*(points[i1].y-points[i2].y);
+        // Triangle is back-face if normal of triangle has z-component(C) > 0 (Anticlockwise is FrontFace)
         if (backfaceVisible?C > 0:C < 0)
            renderer->DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
     }

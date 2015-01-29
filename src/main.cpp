@@ -61,8 +61,8 @@ void Resize(int width, int height)
     mat4 view = LookAt(-g_renderer.lights.lightDirection, vec3(0,0,0), vec3(0,1,0));
     light_vp = proj*view;
 
-    //view = LookAt(vec3(-3, 0.0f, -3.0f), vec3(0,0,0), vec3(0,1,0));
-    //proj = Perspective(60*3.1415f/180.0f, float(width)/float(height), 0.1f, 100.0f);
+    view = LookAt(vec3(-3, 0.1f, -3.0f), vec3(0,0,0), vec3(0,1,0));
+    proj = Perspective(60*3.1415f/180.0f, float(width)/float(height), 0.1f, 100.0f);
     vp = proj*view;
 
     for (size_t i=0; i<g_systems.size(); ++i)
