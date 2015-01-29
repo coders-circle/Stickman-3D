@@ -1,5 +1,5 @@
 #pragma once
-#include <x86intrin.h>
+#include <smmintrin.h>
 
 template<class T>
 inline void Swap(T &a, T &b)

@@ -49,6 +49,7 @@ void Render()
     
     for (auto i=0; i<3; ++i)
     {
+        if (i!=2) continue;
         g_renderer.transforms.model = models[i];
         g_renderer.transforms.mvp = light_vp * g_renderer.transforms.model;
         g_meshes[i].Draw(shadersDepth);
@@ -60,7 +61,8 @@ void Render()
     g_renderer.ClearColorAndDepth();
 
     for (auto i=0; i<3; ++i)
-{
+    {
+        if (i!=2) continue;
         g_renderer.transforms.model = models[i];
         g_renderer.transforms.mvp = vp * g_renderer.transforms.model;
         g_renderer.transforms.bias_light_mvp = bias_matrix * light_vp * g_renderer.transforms.model;
@@ -75,7 +77,7 @@ void Resize(int width, int height)
     mat4 view = LookAt(-g_renderer.lights.lightDirection, vec3(0,0,0), vec3(0,1,0));
     light_vp = proj*view;
 
-    view = LookAt(vec3(3, 1, 0), vec3(0,0,0), vec3(0,1,0));
+    view = LookAt(vec3(1, 0.0f, 0.1f), vec3(0,0,0), vec3(0,1,0));
     proj = Perspective(60*3.1415f/180.0f, float(width)/float(height), 0.1f, 100.0f);
     vp = proj*view;
 }
@@ -120,9 +122,6 @@ int main()
     g_meshes[2].material.depthBias = 0.008f;
     
 
-    mat4 m1(1.0f);
-    std::cout << m1.Transpose() << std::endl;
-    
     // Call resize once to initialize the view and projection matrices
     Resize(g_renderer.GetWidth(), g_renderer.GetHeight());
     

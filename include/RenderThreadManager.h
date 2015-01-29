@@ -1,7 +1,7 @@
 #pragma once
 #include <atomic>
 
-const int NUM_THREADS = 4;
+const int NUM_THREADS = 8;
 
 class Renderer;
 class RenderThreadManager
@@ -42,7 +42,7 @@ public:
         while (!destroy)
         {
             if (!running[i])
-                std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+                std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(0.001));
             else
             {
                 draw(m_offset[i], m_numTriangles[i]);
@@ -78,7 +78,7 @@ public:
         }
 
         while (runningThreads>0)
-             std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+             ;//std::this_thread::sleep_for(std::chrono::nanoseconds(1));
     }
     
 };
