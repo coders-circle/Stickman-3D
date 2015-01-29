@@ -30,6 +30,7 @@ mat4 bias_matrix
 // Shaders to generate depth buffer in light space
 #include <shaders/depth_shaders3d.h>
 
+
 float angle=45.0f*3.1415f/180.0f;
 mat4 Rotate = RotateX(-90*3.1415f/180.0f);
 // Render objects
@@ -82,7 +83,7 @@ void Resize(int width, int height)
 // Update each frame by time-step dt
 void Update(double dt)
 {
-    angle += dt;
+    angle += float(dt);
 }
 
 #ifdef _WIN32
@@ -118,6 +119,9 @@ int main()
     g_meshes[1].material.depthBias = 0.0f;//-0.000005f;
     g_meshes[2].material.depthBias = 0.008f;
     
+
+    mat4 m1(1.0f);
+    std::cout << m1.Transpose() << std::endl;
     
     // Call resize once to initialize the view and projection matrices
     Resize(g_renderer.GetWidth(), g_renderer.GetHeight());

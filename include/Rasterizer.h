@@ -74,7 +74,7 @@ private:
                     x2 = Min(x2, width);
 
                     point.pos[1] = y;
-                    xdiff = p.e2->x - p.e1->x;
+                    xdiff = float(p.e2->x - p.e1->x);
                     start = x1 - p.e1->x;
 
                     dincr = (p.e2->d - p.e1->d)/float(xdiff);

@@ -1,4 +1,5 @@
 #pragma once
+#include <x86intrin.h>
 
 template<class T>
 inline void Swap(T &a, T &b)
@@ -168,7 +169,7 @@ public:
 
     operator RGBColor() const
     {
-        return RGBColor(r*255, g*255, b*255);
+        return RGBColor(uint8_t(r*255), uint8_t(g*255), uint8_t(b*255));
     }
 };
 
@@ -179,31 +180,43 @@ public:
     {
         struct { float r, g, b, a; };
         struct { float x, y, z, w; };
+        __m128 xyzw;
     };
     vec4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
     vec4(float x, float y, float z, float w = 1.0f) : x(x), y(y), z(z), w(w) {}
     vec4(const vec3& v, float w=1.0f) : x(v.x), y(v.y), z(v.z), w(w) {}
     vec4(const vec2& v, float z=0.0f, float w=1.0f) : x(v.x), y(v.y), z(z), w(w) {}
+    vec4(const __m128& xyzw) : xyzw(xyzw) {}
 
     vec4 operator+(const vec4 &other) const
     {
-        return vec4(x+other.x, y+other.y, z+other.z, w+other.w);
+        //return vec4(x+other.x, y+other.y, z+other.z, w+other.w);
+        return vec4(_mm_add_ps(xyzw, other.xyzw));
     }
     vec4 operator-(const vec4 &other) const
     {
-        return vec4(x-other.x, y-other.y, z-other.z, w-other.w);
+        //return vec4(x-other.x, y-other.y, z-other.z, w-other.w);
+        return vec4(_mm_sub_ps(xyzw, other.xyzw));
+    }
+    vec4 operator*(const vec4 &other) const
+    {
+        //return vec4(x*p, y*p, z*p, w*p);
+        return vec4(_mm_mul_ps(xyzw, other.xyzw));
     }
     vec4 operator*(float p) const
     {
-        return vec4(x*p, y*p, z*p, w*p);
+        //return vec4(x*p, y*p, z*p, w*p);
+        return vec4(_mm_mul_ps(xyzw, _mm_set1_ps(p)));
     }
     vec4 operator/(float p) const
     {
-        return vec4(x/p, y/p, z/p, w/p);
+        //return vec4(x/p, y/p, z/p, w/p);
+        return vec4(_mm_div_ps(xyzw, _mm_set1_ps(p)));
     }
     float Dot(const vec4 &other) const
     {
-        return x*other.x + y*other.y + z*other.z + w*other.w;
+        //return x*other.x + y*other.y + z*other.z + w*other.w;
+        return _mm_cvtss_f32(_mm_dp_ps(xyzw, other.xyzw, 0xF1));
     }
     vec4 operator -() const 
     {
@@ -211,7 +224,7 @@ public:
     }
     vec3 ConvertToVec3() const
     {
-        return vec3(x/w, y/w, z/w);
+        return (*this)/w;
     }
     float& operator[] (size_t i)
     {
@@ -231,7 +244,7 @@ public:
     }
     float Length()
     {
-        return sqrtf(x*x+y*y+z*z+w*w);
+        return sqrtf((*this).Dot(*this));
     }
     void Normalize()
     {

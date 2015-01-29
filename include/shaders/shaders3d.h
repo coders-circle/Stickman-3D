@@ -24,8 +24,8 @@ public:
         // Also take to light space; for shadow map calculations
         attribute[2] = g_renderer.transforms.bias_light_mvp * vec4(vertex.position);
         attribute[2] = attribute[2].ConvertToVec3();
-        attribute[2].x = (attribute[2].x) * g_renderer.GetWidth();
-        attribute[2].y = (attribute[2].y) * g_renderer.GetHeight();
+        attribute[2].x = (attribute[2].x) * (float)g_renderer.GetWidth();
+        attribute[2].y = (attribute[2].y) * (float)g_renderer.GetHeight();
         return p;
     }
 
