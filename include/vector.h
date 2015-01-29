@@ -1,5 +1,12 @@
 #pragma once
+
+#if defined(_MSC_VER)
+/* Microsoft C/C++-compatible compiler */
+#include <intrin.h>
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+/* GCC-compatible compiler, targeting x86/x86-64 */
 #include <x86intrin.h>
+#endif
 
 template<class T>
 inline void Swap(T &a, T &b)
@@ -215,8 +222,8 @@ public:
     }
     float Dot(const vec4 &other) const
     {
-        //return x*other.x + y*other.y + z*other.z + w*other.w;
-        return _mm_cvtss_f32(_mm_dp_ps(xyzw, other.xyzw, 0xF1));
+        return x*other.x + y*other.y + z*other.z + w*other.w;
+        //return _mm_cvtss_f32(_mm_dp_ps(xyzw, other.xyzw, 0xF1));
     }
     vec4 operator -() const 
     {
@@ -273,6 +280,4 @@ inline std::ostream& operator << (std::ostream &os, const vec4 &r)
     os << "X: " << r.r << " Y: " << r.g << " Z: " << r.b << " W: " << r.a;
     return os;
 }
-
-
 

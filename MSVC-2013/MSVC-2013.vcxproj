@@ -71,8 +71,12 @@
     <ClInclude Include="..\include\Bitmap.h" />
     <ClInclude Include="..\include\common.h" />
     <ClInclude Include="..\include\matrix.h" />
+    <ClInclude Include="..\include\Mesh.h" />
     <ClInclude Include="..\include\Rasterizer.h" />
+    <ClInclude Include="..\include\RasterizerStructs.h" />
     <ClInclude Include="..\include\Renderer.h" />
+    <ClInclude Include="..\include\RenderThreadManager.h" />
+    <ClInclude Include="..\include\TextureManager.h" />
     <ClInclude Include="..\include\Timer.h" />
     <ClInclude Include="..\include\transform.h" />
     <ClInclude Include="..\include\vector.h" />
