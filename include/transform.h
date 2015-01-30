@@ -83,7 +83,7 @@ inline mat4 LookAt(const vec3& eye, const vec3& target, const vec3& up)
         vec4(xaxis, -eye.Dot(xaxis)),
         vec4(yaxis, -eye.Dot(yaxis)),
         vec4(zaxis, -eye.Dot(zaxis)),
-        vec4()
+        vec4(0,0,0,1)
     );
 }
 

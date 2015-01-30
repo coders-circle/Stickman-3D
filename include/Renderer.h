@@ -112,7 +112,11 @@ public:
         mat4 
             mvp,            // Model-View-Projection composite matrix
             model,          // Model matrix
-            bias_light_mvp; // Texture matrix == Model-View-Projection matrix for light space combined with bias matrix
+            bias_light_mvp, // Texture matrix == Model-View-Projection matrix for light space combined with bias matrix
+
+            vp,             // View-Projection matrix
+            light_vp;       // View-Projection matrix for light space
+
     } transforms;
     
     struct
@@ -171,10 +175,8 @@ inline void RenderThreadManager::DrawTriangles(void(*fragmentShader)(Point<N>&),
             continue;
 
         // BackFace or FrontFace Culling
-        int C =    points[i1].x*(points[i2].y-points[i3].y) +
-                   points[i2].x*(points[i3].y-points[i1].y) +
-                   points[i3].x*(points[i1].y-points[i2].y);
-        // Triangle is back-face if normal of triangle has z-component(C) > 0 (Anticlockwise is FrontFace)
+        int C = (points[i2].x-points[i1].x) * (points[i3].y-points[i1].y)
+                - (points[i3].x-points[i1].x) * (points[i2].y-points[i1].y);
         if (backfaceVisible?C > 0:C < 0)
            renderer->DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
     }

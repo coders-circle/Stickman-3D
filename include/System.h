@@ -47,7 +47,7 @@ private:
     
 };
 
-extern mat4 light_vp, bias_matrix, vp;
+extern mat4 bias_matrix;
 
 template <class T>
 class MeshRenderSystem : public System<TransformComponent, MeshComponent<T>>
@@ -57,18 +57,13 @@ public:
     
     void RenderShadow()
     {
-        // First Pass:
-        // Create depth buffer in light space
-        m_renderer->UseDepthBuffer(1);
-        m_renderer->ClearDepth();
-        
         for (size_t i=0; i<SystemBase::m_entities.size(); ++i)
         {
             Entity* entity = SystemBase::m_entities[i];
             auto mc = entity->GetComponent<MeshComponent<T>>();
             m_renderer->transforms.model = entity->GetComponent<TransformComponent>()->GetTransform()
                                             * Scale(mc->scale);
-            m_renderer->transforms.mvp = light_vp * m_renderer->transforms.model;
+            m_renderer->transforms.mvp = m_renderer->transforms.light_vp * m_renderer->transforms.model;
             mc->mesh.Draw(shadersDepth);
         }
 
@@ -76,23 +71,51 @@ public:
     }
     void Render()
     {
-        // Second Pass:
-        // Render the scene and use previous depth buffer for shadow mapping
-        m_renderer->UseDepthBuffer(0);
-        m_renderer->ClearColorAndDepth();
-
-        for (size_t i=0; i<SystemBase::m_entities.size(); ++i)
+       for (size_t i=0; i<SystemBase::m_entities.size(); ++i)
         {
             Entity* entity = SystemBase::m_entities[i];
             auto mc = entity->GetComponent<MeshComponent<T>>();
             m_renderer->transforms.model = entity->GetComponent<TransformComponent>()->GetTransform()
                                             * Scale(mc->scale);
-            m_renderer->transforms.mvp = vp * m_renderer->transforms.model;
-            m_renderer->transforms.bias_light_mvp = bias_matrix * light_vp * m_renderer->transforms.model;
+            m_renderer->transforms.mvp = m_renderer->transforms.vp * m_renderer->transforms.model;
+            m_renderer->transforms.bias_light_mvp = bias_matrix * m_renderer->transforms.light_vp * m_renderer->transforms.model;
             mc->material.DrawMesh(mc->mesh);
         }
     }
 
 private:
     Renderer* m_renderer;
+};
+
+class CameraSystem : public System<TransformComponent, CameraComponent>
+{
+public:
+    CameraSystem(Renderer* renderer) : m_renderer(renderer), m_activeCamera(0) {}
+
+    void SetActiveCamera(size_t cameraId) { m_activeCamera = cameraId; }
+    size_t GetActiveCamera() const { return m_activeCamera; }
+
+    void Render()
+    {
+        if (m_activeCamera >= m_entities.size())
+            return;
+        auto cam = m_entities[m_activeCamera]->GetComponent<CameraComponent>();
+        auto trans = m_entities[m_activeCamera]->GetComponent<TransformComponent>();
+        mat4 view  = trans->GetTransform().AffineInverse();
+        mat4 proj = cam->projection;
+        m_renderer->transforms.vp = proj * view;
+    }
+
+    void Resize(int width, int height)
+    {
+        for (size_t i=0; i<m_entities.size(); ++i)
+        {
+            auto cam = m_entities[i]->GetComponent<CameraComponent>();
+            auto trans = m_entities[i]->GetComponent<TransformComponent>();
+            cam->projection = Perspective(cam->fov*3.1415f/180, float(width)/float(height), cam->near, cam->far);
+        }
+    }
+private:
+    Renderer* m_renderer;
+    size_t m_activeCamera;
 };

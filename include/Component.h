@@ -25,23 +25,25 @@ struct TransformComponent: public Component<TRANSFORM_COMPONENT>
         transform = Translate(pos) * EulerXYZ(rot);
         isdirty = false;
     }
-    const mat4 GetTransform()
+    mat4 GetTransform()
     {
         if (isdirty)
             UpdateTransform();
         return transform;
     }
-    
+    void SetTransform(const mat4& transform)
+    {
+        this->transform = transform;
+        isdirty = false;
+        pos = transform.Column(3);
+        rot.x = atan2f(transform[2][1], transform[2][2]);
+        rot.y = atan2f(-transform[2][0], sqrtf(transform[2][1]*transform[2][1] + transform[2][2]*transform[2][2]));
+        rot.z = atan2f(transform[1][0], transform[0][0]);
+    }
 
-    float GetRotationX() const { return rot.x; }
-    float GetRotationY() const { return rot.y; }
-    float GetRotationZ() const { return rot.z; }
     const vec3& GetRotation() const { return rot; }
     const vec3& GetPosition() const { return pos; }
 
-    void SetRotationX(float angle) { rot.x = angle; isdirty = true; }
-    void SetRotationY(float angle) { rot.y = angle; isdirty = true; }
-    void SetRotationZ(float angle) { rot.z = angle; isdirty = true; }
     void SetRotation(const vec3& rotation) { rot = rotation; isdirty = true; }
     void SetPosition(const vec3& position) { pos = position; isdirty = true; }
 
@@ -68,4 +70,16 @@ struct MeshComponent : public Component<MESH_COMPONENT>
     Mesh mesh; 
     MaterialClass material;
     float scale;
+};
+
+class CameraSystem;
+struct CameraComponent : public Component<CAMERA_COMPONENT>
+{
+    CameraComponent(float fov = 60, float near = 0.01f, float far = 100.0f)
+        : fov(fov), near(near), far(far) {}
+    float fov, near, far;
+
+    friend CameraSystem;
+private:
+    mat4 projection;
 };

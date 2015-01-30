@@ -87,6 +87,8 @@ public:
     }
 };
 
+class mat4;
+inline std::ostream& operator << (std::ostream &os, const mat4 &m);
 class mat4
 {
 public:
@@ -250,6 +252,20 @@ public:
             m[1][0], m[1][1], m[1][2],
             m[2][0], m[2][1], m[2][2]
         );
+    }
+
+    mat4 AffineInverse() const
+    {
+        mat4 temp(*this);
+        temp = temp.Transpose();
+        temp[3] = vec4(0,0,0,1);
+        vec3 tv = -this->Column(3);
+        vec4 translation = temp * vec4(tv, (*this)[3][3]);
+        temp[0][3] = translation[0];
+        temp[1][3] = translation[1];
+        temp[2][3] = translation[2];
+        temp[3][3] = translation[3];
+        return temp;
     }
 };
 

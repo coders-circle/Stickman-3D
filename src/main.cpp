@@ -24,11 +24,9 @@ TextureManager g_textureManager;    // Default texture manager
     System : A processor that works on certain entities, containing particular set of components.
              A MeshRenderSystem, for instance, draw all entities with Mesh and Transform components using renderer.
 */
+
 std::vector<Entity> g_entities;     // Collection of all entities
 std::vector<SystemBase*> g_systems; // Collection of all systems
-
-// View-Projection matrices for camera space and light space
-mat4 vp, light_vp;
 
 // Bias matrix for texture transformation
 mat4 bias_matrix
@@ -47,9 +45,22 @@ void Render()
     trans->SetRotation(vec3(-90*3.1415f/180.0f, angle, 0));
     trans = g_entities[2].GetComponent<TransformComponent>();
     trans->SetRotation(vec3(0, -angle, 0));
-    
+
+    trans = g_entities[3].GetComponent<TransformComponent>();
+    trans->SetPosition(trans->GetPosition()+vec3(angle/100, 0, 0));
+    trans->SetTransform(LookAt(vec3(-3, 2.0f, -3.0f)+vec3(angle,0,0), vec3(0,1,0), vec3(0,1,0)).AffineInverse());
+
+    // First Pass:
+    // Create depth buffer in light space
+    g_renderer.UseDepthBuffer(1);
+    g_renderer.ClearDepth();
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->RenderShadow();
+
+    // Second Pass:
+    // Render the scene and use previous depth buffer for shadow mapping
+    g_renderer.UseDepthBuffer(0);
+    g_renderer.ClearColorAndDepth();
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->Render();
 }
@@ -59,11 +70,7 @@ void Resize(int width, int height)
 {
     mat4 proj = Orthographic(-5, 5, -5, 5, -10.0f, 10.0f);
     mat4 view = LookAt(-g_renderer.lights.lightDirection, vec3(0,0,0), vec3(0,1,0));
-    light_vp = proj*view;
-
-    view = LookAt(vec3(-3, 0.1f, -3.0f), vec3(0,0,0), vec3(0,1,0));
-    proj = Perspective(60*3.1415f/180.0f, float(width)/float(height), 0.1f, 100.0f);
-    vp = proj*view;
+    g_renderer.transforms.light_vp = proj*view;
 
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->Resize(width, height);
@@ -84,7 +91,7 @@ void Update(double dt)
 
 int main()
 {
-    g_renderer.Initialize("Test Renderer", 100, 100, 800, 600);
+    g_renderer.Initialize("Stickman-3D", 100, 100, 800, 600);
     g_renderer.SetClearColor(RGBColor(100, 149, 237));
     g_renderer.SetRenderCallback(&Render);
     g_renderer.SetUpdateCallback(&Update);
@@ -98,11 +105,13 @@ int main()
     g_renderer.lights.lightDirection.Normalize();
 
     // Add systems
+    CameraSystem cameraSystem(&g_renderer);
+    g_systems.push_back(&cameraSystem);
     MeshRenderSystem<TextureShadowMaterial> diffuseRenderSystem(&g_renderer);
     g_systems.push_back(&diffuseRenderSystem);
 
     // Create some entities
-    g_entities.resize(3);
+    g_entities.resize(4);
     
     // MeshComponent<MaterialType> is a component to store a mesh and a material
     typedef MeshComponent<TextureShadowMaterial> DiffuseMeshComponent;  // TextureShadowMaterial supports texture and shadow on surface
@@ -126,6 +135,11 @@ int main()
     mc->material.depthBias = 0.008f;
     mc->material.textureId = g_textureManager.AddTexture("grass_T.bmp");
     g_entities[2].AddComponent<TransformComponent>(vec3(2,-0.5f,-1));
+
+    // A camera entity
+    g_entities[3].AddComponent<CameraComponent>();
+    auto t = g_entities[3].AddComponent<TransformComponent>();
+    t->SetTransform(LookAt(vec3(-3, 2.0f, -3.0f), vec3(0,1,0), vec3(0,1,0)).AffineInverse());
     
     // Add entities to all systems and initialize the systems
     for (size_t j=0; j<g_systems.size(); ++j)

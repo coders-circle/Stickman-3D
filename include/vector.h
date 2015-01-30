@@ -176,7 +176,8 @@ public:
         return RGBColor(uint8_t(r*255), uint8_t(g*255), uint8_t(b*255));
     }
 };
-
+class vec4;
+inline std::ostream& operator << (std::ostream &os, const vec4 &r) ;
 class vec4
 {
 public:
