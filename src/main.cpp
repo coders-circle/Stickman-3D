@@ -41,14 +41,14 @@ float angle=45.0f*3.1415f/180.0f;
 // Render objects
 void Render()
 {
+    // Some animations
     auto trans = g_entities[0].GetComponent<TransformComponent>();
     trans->SetRotation(vec3(-90*3.1415f/180.0f, angle, 0));
     trans = g_entities[2].GetComponent<TransformComponent>();
     trans->SetRotation(vec3(0, -angle, 0));
 
     trans = g_entities[3].GetComponent<TransformComponent>();
-    trans->SetPosition(trans->GetPosition()+vec3(angle/100, 0, 0));
-    trans->SetTransform(LookAt(vec3(-3, 2.0f, -3.0f)+vec3(angle,0,0), vec3(0,1,0), vec3(0,1,0)).AffineInverse());
+    trans->SetTransform(LookAt(vec3(cosf(angle/10)*4, 2, sinf(angle/10)*4), vec3(0,0,0), vec3(0,1,0)).AffineInverse());
 
     // First Pass:
     // Create depth buffer in light space
@@ -130,7 +130,7 @@ int main()
     g_entities[1].AddComponent<TransformComponent>(vec3(0,-1.05f,0));
     
     // Cube entity, with box mesh and texture loaded from file
-    mc = g_entities[2].AddComponent<DiffuseMeshComponent>(0.5f);
+    mc = g_entities[2].AddComponent<DiffuseMeshComponent>(1.0f);
     mc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
     mc->material.depthBias = 0.008f;
     mc->material.textureId = g_textureManager.AddTexture("grass_T.bmp");

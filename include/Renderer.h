@@ -65,12 +65,29 @@ public:
         for (size_t i=0; i<numVertices; ++i)
         {
             newVertices[i] = f(points[i].attribute, args[i]);
+            bool t = false;
             for (int j=0; j<N; ++j)
                 points[i].attribute[j] = points[i].attribute[j];
-            if (newVertices[i].w == 0.0f) newVertices[i].w = 0.000001f; // avoid divide by zero
+            if (newVertices[i].w == 0.0f)
+                newVertices[i].w = 0.000001f; // avoid divide by zero
+           
+            ///#### TEMPORARY SOLUTION
+            else if (newVertices[i].w < 0)
+            {
+                t = true;
+                newVertices[i].w *= -1;       // Seems to solve the problem when object is partially behind eye and partially in front
+                                              // Hasn't been tested for all cases
+            }
+            ///###
+
             v = vec4(newVertices[i].ConvertToVec3(), newVertices[i].w);
             v.x = (0.5f*v.x + 0.5f)*m_width;
             v.y = (-0.5f*v.y + 0.5f)*m_height;
+
+            ///### TEMPORARY SOLUTION
+            if (t) v.z += 2.0f;
+            ///###
+
             v.z = (0.5f*v.z + 0.5f);
             points[i].FromVec4(v);
         }
