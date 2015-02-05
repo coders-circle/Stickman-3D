@@ -25,8 +25,10 @@ void Renderer::Initialize(const char* title, int x, int y, int width, int height
     m_depthBuffers.push_back(new float[m_width*m_height]);
     m_depthBufferId = 0;
 
-    //m_threader.Initialize();
+#ifdef USE_MULTITHREADING
+    m_threader.Initialize();
     m_threader.renderer = this;
+#endif
 }
 
 void Renderer::MainLoop()

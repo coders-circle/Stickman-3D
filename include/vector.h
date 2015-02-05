@@ -1,5 +1,9 @@
 #pragma once
+//#define USE_SSE
+
+#ifdef USE_SSE
 #include <smmintrin.h>
+#endif
 
 template<class T>
 inline void Swap(T &a, T &b)
@@ -185,43 +189,65 @@ public:
     {
         struct { float r, g, b, a; };
         struct { float x, y, z, w; };
+#ifdef USE_SSE
         __m128 xyzw;
+#endif
     };
     vec4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
     vec4(float x, float y, float z, float w = 1.0f) : x(x), y(y), z(z), w(w) {}
     vec4(const vec3& v, float w=1.0f) : x(v.x), y(v.y), z(v.z), w(w) {}
     vec4(const vec2& v, float z=0.0f, float w=1.0f) : x(v.x), y(v.y), z(z), w(w) {}
+#ifdef USE_SSE
     vec4(const __m128& xyzw) : xyzw(xyzw) {}
+#endif
 
     vec4 operator+(const vec4 &other) const
     {
-        //return vec4(x+other.x, y+other.y, z+other.z, w+other.w);
+#ifndef USE_SSE
+        return vec4(x+other.x, y+other.y, z+other.z, w+other.w);
+#else
         return vec4(_mm_add_ps(xyzw, other.xyzw));
+#endif
     }
     vec4 operator-(const vec4 &other) const
     {
-        //return vec4(x-other.x, y-other.y, z-other.z, w-other.w);
+#ifndef USE_SSE
+        return vec4(x-other.x, y-other.y, z-other.z, w-other.w);
+#else
         return vec4(_mm_sub_ps(xyzw, other.xyzw));
+#endif
     }
     vec4 operator*(const vec4 &other) const
     {
-        //return vec4(x*p, y*p, z*p, w*p);
+#ifndef USE_SSE
+        return vec4(x*other.x, y*other.y, z*other.z, w*other.w);
+#else
         return vec4(_mm_mul_ps(xyzw, other.xyzw));
+#endif
     }
     vec4 operator*(float p) const
     {
-        //return vec4(x*p, y*p, z*p, w*p);
+#ifndef USE_SSE
+        return vec4(x*p, y*p, z*p, w*p);
+#else
         return vec4(_mm_mul_ps(xyzw, _mm_set1_ps(p)));
+#endif
     }
     vec4 operator/(float p) const
     {
-        //return vec4(x/p, y/p, z/p, w/p);
+#ifndef USE_SSE
+        return vec4(x/p, y/p, z/p, w/p);
+#else
         return vec4(_mm_div_ps(xyzw, _mm_set1_ps(p)));
+#endif
     }
     float Dot(const vec4 &other) const
     {
-        //return x*other.x + y*other.y + z*other.z + w*other.w;
+#ifndef USE_SSE
+        return x*other.x + y*other.y + z*other.z + w*other.w;
+#else
         return _mm_cvtss_f32(_mm_dp_ps(xyzw, other.xyzw, 0xF1));
+#endif
     }
     vec4 operator -() const 
     {

@@ -4,6 +4,8 @@
 #include "Rasterizer.h"
 #include <RenderThreadManager.h>
 
+#define USE_MULTITHREADING
+
 // Renderer responsible for managing the window
 //  and drawing pixels and triangles
 class Renderer
@@ -49,8 +51,11 @@ public:
         Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and their attributes
 
         ProcessVertices(points, vs, vertexShader, vertexBuffer, numVertices);
+#ifndef USE_MULTITHREADING
         m_threader.DrawTriangles(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
-        //m_threader.DrawTrianglesThreaded(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
+#else
+        m_threader.DrawTrianglesThreaded(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
+#endif
         delete[] points;
         delete[] vs;
     }
