@@ -27,8 +27,8 @@ void Renderer::Initialize(const char* title, int x, int y, int width, int height
 
 #ifdef USE_MULTITHREADING
     m_threader.Initialize();
-    m_threader.renderer = this;
 #endif
+    m_threader.renderer = this;
 }
 
 void Renderer::MainLoop()

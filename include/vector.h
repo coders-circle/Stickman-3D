@@ -174,6 +174,13 @@ public:
         return vec2(x, y);
     }
 
+    vec3 Reflect(const vec3& normal) const
+    {
+        auto temp = (*this) - normal*2*(this->Dot(normal));
+        temp.Normalize();
+        return temp;
+    }
+
 
     operator RGBColor() const
     {

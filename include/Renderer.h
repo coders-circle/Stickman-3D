@@ -4,7 +4,7 @@
 #include "Rasterizer.h"
 #include <RenderThreadManager.h>
 
-#define USE_MULTITHREADING
+//#define USE_MULTITHREADING
 
 // Renderer responsible for managing the window
 //  and drawing pixels and triangles
@@ -139,12 +139,15 @@ public:
             vp,             // View-Projection matrix
             light_vp;       // View-Projection matrix for light space
 
+        vec3 camPos;        // Position of camera needed for some lighting calculations
+
     } transforms;
     
     struct
     {
-        vec3 lightDirection;
-    } lights;
+        vec3 direction;
+        vec3 diffuse, specular, ambient;
+    } light;
 
 private:
     uint32_t* m_framebuffer;

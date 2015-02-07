@@ -4,8 +4,9 @@
 enum COMPONENT_TYPE
 {
     TRANSFORM_COMPONENT,
-    MESH_COMPONENT,
     CAMERA_COMPONENT,
+    
+    MESH_COMPONENT,
 };
 
 struct ComponentBase
@@ -60,7 +61,7 @@ struct Material
 {};
 
 template <class MaterialClass>
-struct MeshComponent : public Component<MESH_COMPONENT>
+struct MeshComponent : public Component<COMPONENT_TYPE(MESH_COMPONENT+MaterialClass::ID)>
 {
     // Compile-time test for correct Material Class : "MaterialClass" must be derived from Material
     static_assert(std::is_base_of<Material, MaterialClass>::value, "Invalid Material Class");

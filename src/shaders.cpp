@@ -1,7 +1,10 @@
 #include <common.h>
 #include <Mesh.h>
 #include <TextureManager.h>
-#include <shaders/shaders3d.h>
+#include <shaders.h>
 
-TextureShadowShaders::Uniforms TextureShadowShaders::uniforms;
-TextureShadowShaders::ShadersType TextureShadowShaders::shaders;
+DiffuseShaders::Uniforms DiffuseShaders::uniforms;
+DiffuseShaders::ShadersType DiffuseShaders::shaders;
+
+SpecularShaders::Uniforms SpecularShaders::uniforms;
+SpecularShaders::ShadersType SpecularShaders::shaders;

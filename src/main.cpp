@@ -69,7 +69,7 @@ void Render()
 void Resize(int width, int height)
 {
     mat4 proj = Orthographic(-5, 5, -5, 5, -10.0f, 10.0f);
-    mat4 view = LookAt(-g_renderer.lights.lightDirection, vec3(0,0,0), vec3(0,1,0));
+    mat4 view = LookAt(-g_renderer.light.direction, vec3(0,0,0), vec3(0,1,0));
     g_renderer.transforms.light_vp = proj*view;
 
     for (size_t i=0; i<g_systems.size(); ++i)
@@ -101,29 +101,39 @@ int main()
     g_renderer.AddDepthBuffer();
 
     // Light Direction for a directional light
-    g_renderer.lights.lightDirection = vec3(-1.5, -2, -1);
-    g_renderer.lights.lightDirection.Normalize();
+    g_renderer.light.direction = vec3(-1.5, -2, -1);
+    g_renderer.light.direction.Normalize();
+    // Light intenisities
+    const float ambient = 0.2f;
+    g_renderer.light.ambient = vec3(ambient, ambient, ambient);
+    g_renderer.light.diffuse = vec3(1.0f, 1.0f, 1.0f);
+    g_renderer.light.specular = vec3(1.0f, 1.0f, 1.0f);
 
     // Add systems
     CameraSystem cameraSystem(&g_renderer);
     g_systems.push_back(&cameraSystem);
-    MeshRenderSystem<TextureShadowMaterial> diffuseRenderSystem(&g_renderer);
+    MeshRenderSystem<DiffuseMaterial> diffuseRenderSystem(&g_renderer);
+    MeshRenderSystem<SpecularMaterial> specularRenderSystem(&g_renderer);
     g_systems.push_back(&diffuseRenderSystem);
+    g_systems.push_back(&specularRenderSystem);
 
     // Create some entities
     g_entities.resize(4);
     
     // MeshComponent<MaterialType> is a component to store a mesh and a material
-    typedef MeshComponent<TextureShadowMaterial> DiffuseMeshComponent;  // TextureShadowMaterial supports texture and shadow on surface
+    typedef MeshComponent<DiffuseMaterial> DiffuseMeshComponent;  // DiffuseMaterial supports diffuse color, texture and shadow on surface
+    typedef MeshComponent<SpecularMaterial> SpecularMeshComponent; // SpecularMaterial also supports a specular color and shininess
     
     // Stickman entity, with mesh loaded from file
-    auto mc = g_entities[0].AddComponent<DiffuseMeshComponent>(0.25f);
-    mc->mesh.LoadFile("test.dat");
-    mc->material.depthBias = 0.05f;
+    auto msc = g_entities[0].AddComponent<SpecularMeshComponent>(0.25f);
+    msc->mesh.LoadFile("test.dat");
+    msc->material.depthBias = 0.05f;
+    msc->material.shininess = 7.0f;
+    msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
     g_entities[0].AddComponent<TransformComponent>(vec3(0,-1,0), vec3(-90*3.1415f/180.0f,0,0));
     
     // Ground entity, with box mesh and green diffuse color
-    mc = g_entities[1].AddComponent<DiffuseMeshComponent>();
+    auto mc = g_entities[1].AddComponent<DiffuseMeshComponent>();
     mc->mesh.LoadBox(3.0f, 0.05f, 3.0f);
     mc->material.depthBias = 0.0f;
     mc->material.diffuseColor = vec3(0.0f, 1.0f, 0.0f);

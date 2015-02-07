@@ -37,7 +37,7 @@ public:
     }
     
     // Sample at given texture coordinates
-    const RGBColor& Sample(float u, float v)
+    const RGBColor& Sample(float u, float v) const
     {
         uint32_t x = uint32_t(u*((float)width-1));
         uint32_t y = uint32_t(v*((float)height-1));
@@ -46,7 +46,7 @@ public:
         return pixels[y*width + x];
     }
     // Sample at given texture coordinates
-    const RGBColor& Sample(const vec2& v)
+    const RGBColor& Sample(const vec2& v) const
     {
         return Sample(v.u, v.v);
     }

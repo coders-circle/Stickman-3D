@@ -104,6 +104,7 @@ public:
         mat4 view  = trans->GetTransform().AffineInverse();
         mat4 proj = cam->projection;
         m_renderer->transforms.vp = proj * view;
+        m_renderer->transforms.camPos = trans->GetPosition();
     }
 
     void Resize(int width, int height)
