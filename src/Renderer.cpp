@@ -1,7 +1,7 @@
 #include <common.h>
 #include <Renderer.h>
 
-Renderer::Renderer() : m_timer(/*60.0*/300.0) 
+Renderer::Renderer() : m_timer(/*60.0*/300.0)
 {}
 
 Renderer::~Renderer()
@@ -25,7 +25,7 @@ void Renderer::Initialize(const char* title, int x, int y, int width, int height
     m_depthBuffers.push_back(new float[m_width*m_height]);
     m_depthBufferId = 0;
 
-    //m_threader.Initialize();
+    m_threader.Initialize();
     m_threader.renderer = this;
 }
 

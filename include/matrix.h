@@ -168,7 +168,7 @@ public:
 
     mat4 operator* (const mat4& m2) const
     {
-        /*return mat4(
+        return mat4(
             (m[0][0]*m2.m[0][0] + m[0][1]*m2.m[1][0] + m[0][2]*m2.m[2][0] + m[0][3]*m2.m[3][0]),
             (m[0][0]*m2.m[0][1] + m[0][1]*m2.m[1][1] + m[0][2]*m2.m[2][1] + m[0][3]*m2.m[3][1]),
             (m[0][0]*m2.m[0][2] + m[0][1]*m2.m[1][2] + m[0][2]*m2.m[2][2] + m[0][3]*m2.m[3][2]),
@@ -185,14 +185,14 @@ public:
             (m[3][0]*m2.m[0][1] + m[3][1]*m2.m[1][1] + m[3][2]*m2.m[2][1] + m[3][3]*m2.m[3][1]),
             (m[3][0]*m2.m[0][2] + m[3][1]*m2.m[1][2] + m[3][2]*m2.m[2][2] + m[3][3]*m2.m[3][2]),
             (m[3][0]*m2.m[0][3] + m[3][1]*m2.m[1][3] + m[3][2]*m2.m[2][3] + m[3][3]*m2.m[3][3])
-        );*/
+        );/*/
         mat4 temp = m2.Transpose();
         return mat4(
             (*this)[0].Dot(temp[0]), (*this)[0].Dot(temp[1]), (*this)[0].Dot(temp[2]), (*this)[0].Dot(temp[3]), 
             (*this)[1].Dot(temp[0]), (*this)[1].Dot(temp[1]), (*this)[1].Dot(temp[2]), (*this)[1].Dot(temp[3]), 
             (*this)[2].Dot(temp[0]), (*this)[2].Dot(temp[1]), (*this)[2].Dot(temp[2]), (*this)[2].Dot(temp[3]), 
             (*this)[3].Dot(temp[0]), (*this)[3].Dot(temp[1]), (*this)[3].Dot(temp[2]), (*this)[3].Dot(temp[3])
-        );
+        );*/
     }
     vec4 Column(int i) const
     {
@@ -239,7 +239,7 @@ public:
     mat4 Transpose() const
     {
          mat4 temp = *this;
-        _MM_TRANSPOSE4_PS(temp[0].xyzw, temp[1].xyzw, temp[2].xyzw, temp[3].xyzw);
+        //_MM_TRANSPOSE4_PS(temp[0].xyzw, temp[1].xyzw, temp[2].xyzw, temp[3].xyzw);
         return temp;
     }
 
