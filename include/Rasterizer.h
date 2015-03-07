@@ -5,7 +5,7 @@ class Rasterizer
 {
 public:
     template<int N>
-    static void DrawTriangle(Point<N>* point1, Point<N>* point2, Point<N>* point3, void(*f)(Point<N>&), int width, int height, float* depthBuffer)
+    static void DrawTriangle(Point<N>* point1, Point<N>* point2, Point<N>* point3, void(*f)(Point<N>&), int width, int height, float* depthBuffer, bool transparency=false)
     {
         int *pt1 = point1->pos,
             *pt2 = point2->pos,
@@ -27,7 +27,7 @@ public:
         if (num == 2)
         {
             Pair<N> pair(&edges[0], &edges[1]);
-            DrawSpans(pair, f, width, height, depthBuffer);
+            DrawSpans(pair, f, width, height, depthBuffer, transparency);
         }
         // If 3 edges were created, find the longest edge and draw spans for two pairs
         //  each pair containing the longest edge and a short edge
@@ -44,14 +44,14 @@ public:
                 Swap(se1, se2);
 
             Pair<N> p1(&edges[le], &edges[se1]), p2(&edges[le], &edges[se2]);
-            DrawSpans(p1, f, width, height, depthBuffer);
-            DrawSpans(p2, f, width, height, depthBuffer);
+            DrawSpans(p1, f, width, height, depthBuffer, transparency);
+            DrawSpans(p2, f, width, height, depthBuffer, transparency);
         }
     }
 
 private:
     template<int N>
-    static void DrawSpans(Pair<N> &p, void(*f)(Point<N>&), int width, int height, float* depthBuffer)
+    static void DrawSpans(Pair<N> &p, void(*f)(Point<N>&), int width, int height, float* depthBuffer, bool transparency)
     {
         Point<N> point;
         float xdiff;
@@ -95,7 +95,10 @@ private:
                         {
                             // Depth test
                             float& depth = depthBuffer[point.pos[1]*width+point.pos[0]];
-                            if (point.d < depth)
+                            
+                            float dd = point.d - depth;
+                            bool depthtest = transparency?(dd < 0 && fabs(dd) > 0.000007f):(dd < 0);
+                            if (depthtest)
                             {
                                 depth = point.d;
                                 // Pass to the fragment shader

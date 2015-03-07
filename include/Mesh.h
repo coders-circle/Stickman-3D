@@ -21,9 +21,9 @@ public:
     
     // Draw the mesh with the given shaders
     template<class ShadersClass>
-    void Draw(ShadersClass &shaders)
+    void Draw(ShadersClass &shaders, bool transparency=false)
     {
-        shaders.DrawTriangles(m_vertices, m_indices);
+        shaders.DrawTriangles(m_vertices, m_indices, transparency);
     }
 
 private:

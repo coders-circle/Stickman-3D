@@ -9,6 +9,7 @@ public:
     virtual void Update(double dt) {};
     virtual void RenderShadow() {};
     virtual void Render() {};
+    virtual void PostRender() {};
     virtual void Resize(int width, int height) {};
 
     virtual void AddEntity(Entity* entity) { m_entities.push_back(entity); };
@@ -57,7 +58,7 @@ public:
     
     void RenderShadow()
     {
-        for (size_t i=0; i<SystemBase::m_entities.size(); ++i)
+        for (size_t i=0; i< SystemBase::m_entities.size(); ++i)
         {
             Entity* entity = SystemBase::m_entities[i];
             auto mc = entity->GetComponent<MeshComponent<T>>();
@@ -71,15 +72,33 @@ public:
     }
     void Render()
     {
-       for (size_t i=0; i<SystemBase::m_entities.size(); ++i)
+        for (size_t i=0; i<SystemBase::m_entities.size(); ++i)
         {
             Entity* entity = SystemBase::m_entities[i];
             auto mc = entity->GetComponent<MeshComponent<T>>();
+            if (mc->transparent)
+                continue;
             m_renderer->transforms.model = entity->GetComponent<TransformComponent>()->GetTransform()
                                             * Scale(mc->scale);
             m_renderer->transforms.mvp = m_renderer->transforms.vp * m_renderer->transforms.model;
             m_renderer->transforms.bias_light_mvp = bias_matrix * m_renderer->transforms.light_vp * m_renderer->transforms.model;
             mc->material.DrawMesh(mc->mesh);
+        }
+    }
+
+    void PostRender()
+    {
+        for (size_t i=0; i<SystemBase::m_entities.size(); ++i)
+        {
+            Entity* entity = SystemBase::m_entities[i];
+            auto mc = entity->GetComponent<MeshComponent<T>>();
+            if (!mc->transparent)
+                continue;
+            m_renderer->transforms.model = entity->GetComponent<TransformComponent>()->GetTransform()
+                                            * Scale(mc->scale);
+            m_renderer->transforms.mvp = m_renderer->transforms.vp * m_renderer->transforms.model;
+            m_renderer->transforms.bias_light_mvp = bias_matrix * m_renderer->transforms.light_vp * m_renderer->transforms.model;
+            mc->material.DrawMesh(mc->mesh, true);
         }
     }
 

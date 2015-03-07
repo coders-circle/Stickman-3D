@@ -37,7 +37,7 @@ mat4 bias_matrix
     0, 0, 0, 1
 );
 
-float angle=45.0f*3.1415f/180.0f;
+float angle=(180)*3.1415f/180.0f;
 // Render objects
 void Render()
 {
@@ -48,7 +48,7 @@ void Render()
     trans->SetRotation(vec3(0, -angle, 0));
 
     trans = g_entities[3].GetComponent<TransformComponent>();
-    trans->SetTransform(LookAt(vec3(cosf(angle/10)*4, 2, sinf(angle/10)*4), vec3(0,0,0), vec3(0,1,0)).AffineInverse());
+    trans->SetTransform(LookAt(vec3(cosf(angle)*4, 2, sinf(angle)*4), vec3(0,0,0), vec3(0,1,0)).AffineInverse());
 
     // First Pass:
     // Create depth buffer in light space
@@ -63,6 +63,11 @@ void Render()
     g_renderer.ClearColorAndDepth();
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->Render();
+
+    // Third Pass:
+    // Render the scene with transparent objects
+    for (size_t i=0; i<g_systems.size(); ++i)
+        g_systems[i]->PostRender();
 }
 
 // On resize of window, we calculate the projection matrix
@@ -79,7 +84,7 @@ void Resize(int width, int height)
 // Update each frame by time-step dt
 void Update(double dt)
 {
-    angle += float(dt);
+    angle += float(dt/10);
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->Update(dt);
 }
@@ -118,7 +123,7 @@ int main()
     g_systems.push_back(&specularRenderSystem);
 
     // Create some entities
-    g_entities.resize(4);
+    g_entities.resize(5);
     
     // MeshComponent<MaterialType> is a component to store a mesh and a material
     typedef MeshComponent<DiffuseMaterial> DiffuseMeshComponent;  // DiffuseMaterial supports diffuse color, texture and shadow on surface
@@ -142,6 +147,7 @@ int main()
     // Cube entity, with box mesh and texture loaded from file
     mc = g_entities[2].AddComponent<DiffuseMeshComponent>(1.0f);
     mc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
+    //mc->mesh.LoadSphere(0.7f, 40, 40);
     mc->material.depthBias = 0.008f;
     mc->material.textureId = g_textureManager.AddTexture("grass_T.bmp");
     g_entities[2].AddComponent<TransformComponent>(vec3(2,-0.5f,-1));
@@ -150,7 +156,17 @@ int main()
     g_entities[3].AddComponent<CameraComponent>();
     auto t = g_entities[3].AddComponent<TransformComponent>();
     t->SetTransform(LookAt(vec3(-3, 2.0f, -3.0f), vec3(0,1,0), vec3(0,1,0)).AffineInverse());
-    
+ 
+    // Test transparent entity
+    mc = g_entities[4].AddComponent<DiffuseMeshComponent>();
+    mc->mesh.LoadSphere(0.5f, 30, 30);
+    //mc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
+    mc->material.depthBias = 0.0f;
+    mc->material.diffuseColor = vec4(1, 0, 0, 0.4f);
+    mc->transparent = true;
+    g_entities[4].AddComponent<TransformComponent>(vec3(-1.05f, 0, 0));
+
+
     // Add entities to all systems and initialize the systems
     for (size_t j=0; j<g_systems.size(); ++j)
     {
