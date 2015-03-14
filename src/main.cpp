@@ -43,9 +43,9 @@ void Render()
 {
     // Some animations
     auto trans = g_entities[0].GetComponent<TransformComponent>();
-    trans->SetRotation(vec3(-90*3.1415f/180.0f, angle, 0));
-    trans = g_entities[2].GetComponent<TransformComponent>();
-    trans->SetRotation(vec3(0, -angle, 0));
+    //trans->SetRotation(vec3(-90*3.1415f/180.0f, angle, 0));
+    //trans = g_entities[2].GetComponent<TransformComponent>();
+    //trans->SetRotation(vec3(0, -angle, 0));
 
     trans = g_entities[3].GetComponent<TransformComponent>();
     trans->SetTransform(LookAt(vec3(cosf(angle)*4, 2, sinf(angle)*4), vec3(0,0,0), vec3(0,1,0)).AffineInverse());
@@ -139,7 +139,7 @@ int main()
     
     // Ground entity, with box mesh and green diffuse color
     auto mc = g_entities[1].AddComponent<DiffuseMeshComponent>();
-    mc->mesh.LoadBox(3.0f, 0.05f, 3.0f);
+    mc->mesh.LoadBox(3.0f, 0.05f, 3.0f);        // Larger than this ground size seems to give problems while shadow mapping; so use smaller pieces of ground entities instead of one large box
     mc->material.depthBias = 0.0f;
     mc->material.diffuseColor = vec3(0.0f, 1.0f, 0.0f);
     g_entities[1].AddComponent<TransformComponent>(vec3(0,-1.05f,0));
