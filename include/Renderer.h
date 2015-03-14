@@ -1,5 +1,5 @@
 #pragma once
-#include "matrix.h"
+#include "quat.h"
 #include "Timer.h"
 #include "Rasterizer.h"
 #include <RenderThreadManager.h>

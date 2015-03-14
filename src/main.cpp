@@ -131,7 +131,7 @@ int main()
     
     // Stickman entity, with mesh loaded from file
     auto msc = g_entities[0].AddComponent<SpecularMeshComponent>(0.25f);
-    msc->mesh.LoadFile("test.dat");
+    msc->mesh.LoadAnimatedFile("test1.dat");
     msc->material.depthBias = 0.05f;
     msc->material.shininess = 7.0f;
     msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);

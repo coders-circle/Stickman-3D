@@ -1,6 +1,7 @@
 #pragma once
 #include "Renderer.h"
 #include "TextureManager.h"
+#include "animation.h"
 
 struct Vertex
 {
@@ -12,6 +13,11 @@ struct Vertex
 class Mesh
 {
 public:
+    Mesh();
+    ~Mesh();
+
+    //Load animated mesh from a file
+    void LoadAnimatedFile(const std::string &filename);
     // Load mesh from a file
     void LoadFile(const std::string &filename);
     // Load a box as the mesh
@@ -29,4 +35,16 @@ public:
 private:
     std::vector<Vertex> m_vertices;     // Vertex Buffer
     std::vector<uint16_t> m_indices;    // Index Buffer
+    
+    struct AnimationInfo
+    {
+        std::vector<Bone> bones;
+        Node root;
+        std::vector<Animation> animations;
+        std::vector<WeightInfo> skin;
+
+        std::map<unsigned int, Node*> map;
+    } * m_animation;
+
+    void ReadNode(std::fstream& file, Node* node);
 };

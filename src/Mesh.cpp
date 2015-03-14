@@ -1,6 +1,94 @@
 #include <common.h>
 #include <Mesh.h>
 
+Mesh::Mesh() : m_animation(NULL) {}
+
+Mesh::~Mesh()
+{
+    if (m_animation)
+        delete m_animation;
+}
+
+void Mesh::ReadNode(std::fstream& file, Node* node)
+{
+    unsigned int id, nChildren;
+    file.read((char*)&id, sizeof(id));
+    file.read((char*)&nChildren, sizeof(nChildren));
+    m_animation->map[id] = node;
+    node->children.resize(nChildren);
+    for (unsigned int i=0; i<nChildren; ++i)
+        ReadNode(file, &node->children[i]);
+}
+void Mesh::LoadAnimatedFile(const std::string &filename)
+{
+    if (!m_animation)
+        m_animation = new AnimationInfo();
+
+    std::fstream file;
+    file.open(filename, std::ios::binary | std::ios::in);
+    if (!file.good())
+    {
+        std::cout << "Couldn't load mesh from file: " << filename << std::endl;
+        return;
+    }
+
+    ReadNode(file, &m_animation->root);
+
+    std::vector<size_t> wtcnt;
+
+    uint32_t nvertices;
+    file.read((char*)&nvertices, sizeof(nvertices));
+    m_vertices.resize(nvertices);
+    m_animation->skin.resize(nvertices);
+    wtcnt.resize(nvertices, 0);
+    file.read((char*)&m_vertices[0], nvertices*sizeof(Vertex));
+
+    uint32_t nindices;
+    file.read((char*)&nindices, sizeof(nindices));
+    m_indices.resize(nindices);
+    file.read((char*)&m_indices[0], nindices*sizeof(uint16_t));
+
+
+    uint32_t nBones;
+    file.read((char*)&nBones, sizeof(nBones));
+    m_animation->bones.resize(nBones);
+    for (size_t j=0; j<nBones; ++j)
+    {
+        Bone& bn = m_animation->bones[j];
+        unsigned int id;
+        file.read((char*)&id, sizeof(id));
+        bn.node = m_animation->map[id];
+        file.read((char*)&bn.offset, sizeof(bn.offset));
+
+        uint32_t nWeights;
+        file.read((char*)&nWeights, sizeof(nWeights));
+        
+        struct VWeight
+        {
+            unsigned int vid;
+            float wt;
+        };
+        std::vector<VWeight> weights(nWeights);
+        file.read((char*)&weights[0], sizeof(VWeight)*nWeights);
+        
+        for (size_t k=0; k<nWeights; ++k)
+        {
+            size_t wtid = wtcnt[weights[k].vid]++;
+            m_animation->skin[weights[k].vid].weights[wtid] = weights[k].wt;
+            m_animation->skin[weights[k].vid].boneids[wtid] = j;
+        }
+    }
+    
+    // TODO: Load Animation
+    // unsigned int npkeys, nrkeys;
+    //    file.read((char*)&npkeys, sizeof(npkeys));
+    //    file.read((char*)&nrkeys, sizeof(nrkeys));
+
+        
+    
+    file.close();
+}
+
 void Mesh::LoadFile(const std::string &filename)
 {
     std::fstream file;
@@ -20,6 +108,8 @@ void Mesh::LoadFile(const std::string &filename)
     file.read((char*)&nindices, sizeof(nindices));
     m_indices.resize(nindices);
     file.read((char*)&m_indices[0], nindices*sizeof(uint16_t));
+
+    file.close();
 }
 
 void Mesh::LoadBox(float x, float y, float z)

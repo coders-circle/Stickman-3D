@@ -48,8 +48,6 @@ void WriteNode(aiNode* node)
 {
     nodemaps[node->mName.C_Str()] = nodesNum;
     file.write((char*)&nodesNum, sizeof(nodesNum));
-    file.write((char*)&node->mNumMeshes, sizeof(unsigned int));
-    file.write((char*)node->mMeshes, sizeof(unsigned int)*node->mNumMeshes);
     file.write((char*)&node->mNumChildren, sizeof(unsigned int));
     nodesNum++;
     for (unsigned int i=0; i<node->mNumChildren; ++i)
@@ -62,7 +60,7 @@ int main()
     {
         Assimp::Importer importer;
         const std::string iFilename = "StickmanAnim.dae";
-        const std::string oFilename = "test.dat";
+        const std::string oFilename = "test1.dat";
 
         const aiScene* scene = importer.ReadFile(iFilename.c_str(),
                         aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
@@ -154,7 +152,7 @@ int main()
                 
                 file.write((char*)&chn->mNumPositionKeys, sizeof(chn->mNumPositionKeys));
                 file.write((char*)&chn->mNumRotationKeys, sizeof(chn->mNumRotationKeys));
-                file.write((char*)&chn->mNumScalingKeys, sizeof(chn->mNumScalingKeys));
+                //file.write((char*)&chn->mNumScalingKeys, sizeof(chn->mNumScalingKeys));
 
                 struct RotKey
                 {
@@ -174,7 +172,7 @@ int main()
 
                 file.write((char*)chn->mPositionKeys, sizeof(aiVectorKey)*chn->mNumPositionKeys);
                 file.write((char*)&rotkeys[0], sizeof(RotKey)*chn->mNumRotationKeys);
-                file.write((char*)chn->mScalingKeys, sizeof(aiVectorKey)*chn->mNumScalingKeys);
+                //file.write((char*)chn->mScalingKeys, sizeof(aiVectorKey)*chn->mNumScalingKeys);
             }
         }
 
