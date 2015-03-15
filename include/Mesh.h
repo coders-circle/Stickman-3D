@@ -51,7 +51,7 @@ public:
             shaders.DrawTriangles(m_vertices, m_indices, transparency);
     }
     
-    Animation* GetAnimation() { return &m_animation->animation; }
+    const Animation* GetAnimation() const { return &m_animation->animation; }
     void Animate(double time);
 
 private:

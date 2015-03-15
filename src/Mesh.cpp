@@ -112,27 +112,34 @@ void Mesh::Animate(double time)
         NodeAnim& nd = m_animation->animation.data[i];
         size_t pk = 0, rk = 0;
 
-        if (nd.posKeys.size() > 1)
-        for (size_t j=0; j<nd.posKeys.size()-1; ++j)
+        for (size_t j=1; j<nd.posKeys.size(); ++j)
             if (nd.posKeys[j].time > time)
             {
-                pk = j;
+                pk = j-1;
                 break;
             }
 
-        if (nd.rotKeys.size() > 1)
-        for (size_t j=0; j<nd.rotKeys.size()-1; ++j)
+        for (size_t j=1; j<nd.rotKeys.size(); ++j)
             if (nd.rotKeys[j].time > time)
             {
-                rk = j;
+                rk = j-1;
                 break;
             }
 
-        size_t npk = pk + 1;
-        size_t nrk = rk + 1;
+        size_t npk = (pk + 1);//%nd.posKeys.size();
+        size_t nrk = (rk + 1);//%nd.rotKeys.size();
 
-        vec3 pos = nd.posKeys[pk].vec;
-        quat rot = nd.rotKeys[rk].rot;
+        double dp = nd.posKeys[npk].time - nd.posKeys[pk].time;
+        double dr = nd.rotKeys[nrk].time - nd.rotKeys[rk].time;
+
+        float pf = 0.0f, rf = 0.0f;
+        if (dp != 0)
+            pf = float((time-nd.posKeys[pk].time)/dp);
+        if (dr != 0)
+            rf = float((time-nd.rotKeys[rk].time)/dr);
+
+        vec3 pos = nd.posKeys[pk].vec + (nd.posKeys[npk].vec - nd.posKeys[pk].vec)*pf;
+        quat rot = nd.rotKeys[rk].rot + (nd.rotKeys[nrk].rot - nd.rotKeys[rk].rot)*rf;
         nd.node->transform = Translate(pos) * mat4(rot);
     }
 

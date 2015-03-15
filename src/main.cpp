@@ -92,9 +92,9 @@ void Update(double dt)
 
     if (g_stickmesh)
     {
-        animtime = (animtime + dt);
+        animtime += dt/4;
         if (animtime > g_stickmesh->GetAnimation()->duration)
-            animtime = 0;
+            animtime -= g_stickmesh->GetAnimation()->duration;
         g_stickmesh->Animate(animtime);
     }
 }
