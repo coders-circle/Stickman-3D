@@ -146,7 +146,7 @@ int main()
     msc->material.depthBias = 0.05f;
     msc->material.shininess = 7.0f;
     msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
-    g_entities[0].AddComponent<TransformComponent>(vec3(0,0.45f,0), vec3(-90*3.1415f/180.0f,0,0));
+    g_entities[0].AddComponent<TransformComponent>(vec3(0,1.0f,0), vec3(-90*3.1415f/180.0f,0,0));
     
     // Ground entity, with box mesh and green diffuse color
     auto mc = g_entities[1].AddComponent<DiffuseMeshComponent>();
