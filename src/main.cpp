@@ -144,7 +144,7 @@ int main()
     g_stickmesh = &msc->mesh;
     msc->mesh.LoadAnimatedFile("test1.dat");
     msc->material.depthBias = 0.05f;
-    msc->material.shininess = 7.0f;
+    msc->material.shininess = 20.0f;
     msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
     g_entities[0].AddComponent<TransformComponent>(vec3(0,1.0f,0), vec3(-90*3.1415f/180.0f,0,0));
     
@@ -169,12 +169,14 @@ int main()
     t->SetTransform(LookAt(vec3(-3, 2.0f, -3.0f), vec3(0,1,0), vec3(0,1,0)).AffineInverse());
  
     // Test transparent entity
-    mc = g_entities[4].AddComponent<DiffuseMeshComponent>();
-    mc->mesh.LoadSphere(0.5f, 30, 30);
-    //mc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
-    mc->material.depthBias = 0.0f;
-    mc->material.diffuseColor = vec4(1, 0, 0, 0.4f);
-    mc->transparent = true;
+    msc = g_entities[4].AddComponent<SpecularMeshComponent>();
+    msc->mesh.LoadSphere(0.5f, 30, 30);
+    //msc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
+    msc->material.depthBias = 0.0f;
+    msc->material.diffuseColor = vec4(1, 0, 0, 0.4f);
+    msc->material.shininess = 20.0f;
+    msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
+    msc->transparent = true;
     g_entities[4].AddComponent<TransformComponent>(vec3(-1.05f, 0, 0));
 
 
