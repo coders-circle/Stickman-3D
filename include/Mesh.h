@@ -29,8 +29,30 @@ public:
     template<class ShadersClass>
     void Draw(ShadersClass &shaders, bool transparency=false)
     {
-        shaders.DrawTriangles(m_vertices, m_indices, transparency);
+        if (m_animation)
+        {
+            for (size_t i=0; i<m_vertices.size(); ++i)
+            {
+                WeightInfo& wt = m_animation->skin[i];
+                mat4 t;
+                for (int k=0; k<6; ++k)
+                {
+                    if (wt.weights[k] <= 0)
+                        continue;
+                    Bone& bn = m_animation->bones[wt.boneids[k]];
+                    t = t + (bn.node->combined_transform * bn.offset) * wt.weights[k];
+                }
+                m_animation->tempVertices[i] = m_vertices[i];
+                m_animation->tempVertices[i].position = t*m_vertices[i].position;
+            }
+            shaders.DrawTriangles(m_animation->tempVertices, m_indices, transparency);
+        }
+        else
+            shaders.DrawTriangles(m_vertices, m_indices, transparency);
     }
+    
+    Animation* GetAnimation() { return &m_animation->animation; }
+    void Animate(double time);
 
 private:
     std::vector<Vertex> m_vertices;     // Vertex Buffer
@@ -40,11 +62,14 @@ private:
     {
         std::vector<Bone> bones;
         Node root;
-        std::vector<Animation> animations;
+        Animation animation;
         std::vector<WeightInfo> skin;
+        std::vector<Vertex> tempVertices;
 
         std::map<unsigned int, Node*> map;
     } * m_animation;
 
     void ReadNode(std::fstream& file, Node* node);
+
+    void UpdateNode(Node& node, Node* parent=NULL);
 };

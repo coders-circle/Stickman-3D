@@ -81,12 +81,22 @@ void Resize(int width, int height)
         g_systems[i]->Resize(width, height);
 }
 
+double animtime;
+Mesh* g_stickmesh = NULL;
 // Update each frame by time-step dt
 void Update(double dt)
 {
     angle += float(dt/10);
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->Update(dt);
+
+    if (g_stickmesh)
+    {
+        animtime = (animtime + dt);
+        if (animtime > g_stickmesh->GetAnimation()->duration)
+            animtime = 0;
+        g_stickmesh->Animate(animtime);
+    }
 }
 
 #ifdef _WIN32
@@ -131,11 +141,12 @@ int main()
     
     // Stickman entity, with mesh loaded from file
     auto msc = g_entities[0].AddComponent<SpecularMeshComponent>(0.25f);
+    g_stickmesh = &msc->mesh;
     msc->mesh.LoadAnimatedFile("test1.dat");
     msc->material.depthBias = 0.05f;
     msc->material.shininess = 7.0f;
     msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
-    g_entities[0].AddComponent<TransformComponent>(vec3(0,-1,0), vec3(-90*3.1415f/180.0f,0,0));
+    g_entities[0].AddComponent<TransformComponent>(vec3(0,0.45f,0), vec3(-90*3.1415f/180.0f,0,0));
     
     // Ground entity, with box mesh and green diffuse color
     auto mc = g_entities[1].AddComponent<DiffuseMeshComponent>();

@@ -43,12 +43,12 @@ struct WeightInfo
 {
     WeightInfo()
     {
-        for (int i=0; i<4; ++i)
+        for (int i=0; i<6; ++i)
         {
             boneids[i] = 0;
             weights[i] = 0;
         }
     }
-    size_t boneids[4];
-    float weights[4];
+    size_t boneids[6];
+    float weights[6];
 };

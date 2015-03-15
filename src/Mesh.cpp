@@ -1,5 +1,6 @@
 #include <common.h>
 #include <Mesh.h>
+#include <transform.h>
 
 Mesh::Mesh() : m_animation(NULL) {}
 
@@ -40,7 +41,9 @@ void Mesh::LoadAnimatedFile(const std::string &filename)
     file.read((char*)&nvertices, sizeof(nvertices));
     m_vertices.resize(nvertices);
     m_animation->skin.resize(nvertices);
+    m_animation->tempVertices.resize(nvertices);
     wtcnt.resize(nvertices, 0);
+
     file.read((char*)&m_vertices[0], nvertices*sizeof(Vertex));
 
     uint32_t nindices;
@@ -78,15 +81,72 @@ void Mesh::LoadAnimatedFile(const std::string &filename)
             m_animation->skin[weights[k].vid].boneids[wtid] = j;
         }
     }
-    
-    // TODO: Load Animation
-    // unsigned int npkeys, nrkeys;
-    //    file.read((char*)&npkeys, sizeof(npkeys));
-    //    file.read((char*)&nrkeys, sizeof(nrkeys));
+   
+    Animation &anim = m_animation->animation;
+    file.read((char*)&anim.duration, sizeof(anim.duration));
+    uint32_t anum;
+    file.read((char*)&anum, sizeof(anum));
+    anim.data.resize(anum);
+    for (size_t j=0; j<anum; ++j)
+    {
+        NodeAnim& nd = anim.data[j];
+        unsigned int id;
+        file.read((char*)&id, sizeof(id));
+        nd.node = m_animation->map[id];
+        unsigned int knum;
+        file.read((char*)&knum, sizeof(knum));
+        nd.posKeys.resize(knum);
+        file.read((char*)&knum, sizeof(knum));
+        nd.rotKeys.resize(knum);
+        file.read((char*)&nd.posKeys[0], sizeof(VecKey)*nd.posKeys.size());
+        file.read((char*)&nd.rotKeys[0], sizeof(RotKey)*nd.rotKeys.size());
+    }
 
-        
-    
     file.close();
+}
+
+void Mesh::Animate(double time)
+{
+    for (size_t i=0; i<m_animation->animation.data.size(); ++i)
+    {
+        NodeAnim& nd = m_animation->animation.data[i];
+        size_t pk = 0, rk = 0;
+
+        if (nd.posKeys.size() > 1)
+        for (size_t j=0; j<nd.posKeys.size()-1; ++j)
+            if (nd.posKeys[j].time > time)
+            {
+                pk = j;
+                break;
+            }
+
+        if (nd.rotKeys.size() > 1)
+        for (size_t j=0; j<nd.rotKeys.size()-1; ++j)
+            if (nd.rotKeys[j].time > time)
+            {
+                rk = j;
+                break;
+            }
+
+        size_t npk = pk + 1;
+        size_t nrk = rk + 1;
+
+        vec3 pos = nd.posKeys[pk].vec;
+        quat rot = nd.rotKeys[rk].rot;
+        nd.node->transform = Translate(pos) * mat4(rot);
+    }
+
+    UpdateNode(m_animation->root);
+}
+
+void Mesh::UpdateNode(Node& node, Node* parent)
+{
+    if (parent)
+        node.combined_transform = parent->combined_transform * node.transform;
+    else
+        node.combined_transform = node.transform;
+    for (size_t i=0; i<node.children.size(); ++i)
+        UpdateNode(node.children[i], &node);
 }
 
 void Mesh::LoadFile(const std::string &filename)
