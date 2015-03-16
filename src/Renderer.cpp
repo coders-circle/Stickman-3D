@@ -25,7 +25,9 @@ void Renderer::Initialize(const char* title, int x, int y, int width, int height
     m_depthBuffers.push_back(new float[m_width*m_height]);
     m_depthBufferId = 0;
 
+#ifdef USE_MULTITHREADING
     m_threader.Initialize();
+#endif
     m_threader.renderer = this;
 }
 

@@ -68,10 +68,10 @@ private:
             {
                 int x1 = p.e1->x;
                 int x2 = p.e2->x;
-                if (x1 < width && x2 >= 0)      // Clipping when x > width or x < 0
+                if (x1 < width && x2 >= 0 && x1 < x2)      // Clipping when x > width or x < 0
                 {
                     x1 = Max(x1, 0);        // Further clipping
-                    x2 = Min(x2, width);
+                    x2 = Min(x2, width-1);
 
                     point.pos[1] = y;
                     xdiff = float(p.e2->x - p.e1->x);

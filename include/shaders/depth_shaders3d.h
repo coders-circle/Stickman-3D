@@ -2,6 +2,8 @@
 
 // Shaders for depth buffer generation
 
+extern Renderer g_renderer;
+
 vec4 VertexDepthShader(vec4 attribute[], const Vertex& vertex)
 {   
     // Since only depth is needed

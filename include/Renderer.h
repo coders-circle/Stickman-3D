@@ -4,6 +4,8 @@
 #include "Rasterizer.h"
 #include <RenderThreadManager.h>
 
+#define USE_MULTITHREADING
+
 // Renderer responsible for managing the window
 //  and drawing pixels and triangles
 class Renderer
@@ -49,8 +51,13 @@ public:
         Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and their attributes
 
         ProcessVertices(points, vs, vertexShader, vertexBuffer, numVertices);
-        //m_threader.DrawTriangles(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
+        
+#ifndef USE_MULTITHREADING
+        m_threader.DrawTriangles(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
+#else
         m_threader.DrawTrianglesThreaded(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
+#endif
+        
         delete[] points;
         delete[] vs;
     }
@@ -61,19 +68,38 @@ public:
     template<int N, class Args>
     void ProcessVertices(Point<N>*points, vec4* newVertices, vec4(*f)(vec4[], const Args&), Args* args, size_t numVertices)
     {
+        
         vec4 v;
         for (size_t i=0; i<numVertices; ++i)
         {
             newVertices[i] = f(points[i].attribute, args[i]);
+            bool t = false;
             for (int j=0; j<N; ++j)
                 points[i].attribute[j] = points[i].attribute[j];
-            if (newVertices[i].w == 0.0f) newVertices[i].w = 0.000001f; // avoid divide by zero
+            if (newVertices[i].w == 0.0f)
+                newVertices[i].w = 0.000001f; // avoid divide by zero
+           
+            ///#### TEMPORARY SOLUTION
+            else if (newVertices[i].w < 0)
+            {
+                t = true;
+                newVertices[i].w *= -1;       // Seems to solve the problem when object is partially behind eye and partially in front
+                                              // Hasn't been tested for all cases
+            }
+            ///###
+
             v = vec4(newVertices[i].ConvertToVec3(), newVertices[i].w);
             v.x = (0.5f*v.x + 0.5f)*m_width;
             v.y = (-0.5f*v.y + 0.5f)*m_height;
+
+            ///### TEMPORARY SOLUTION
+            if (t) v.z += 2.0f;
+            ///###
+
             v.z = (0.5f*v.z + 0.5f);
             points[i].FromVec4(v);
         }
+
     }
     
     int GetWidth() { return m_width; }
@@ -112,13 +138,20 @@ public:
         mat4 
             mvp,            // Model-View-Projection composite matrix
             model,          // Model matrix
-            bias_light_mvp; // Texture matrix == Model-View-Projection matrix for light space combined with bias matrix
+            bias_light_mvp, // Texture matrix == Model-View-Projection matrix for light space combined with bias matrix
+
+            vp,             // View-Projection matrix
+            light_vp;       // View-Projection matrix for light space
+
+        vec3 camPos;        // Position of camera needed for some lighting calculations
+
     } transforms;
     
     struct
     {
-        vec3 lightDirection;
-    } lights;
+        vec3 direction;
+        vec3 diffuse, specular, ambient;
+    } light;
 
 private:
     uint32_t* m_framebuffer;
@@ -171,10 +204,9 @@ inline void RenderThreadManager::DrawTriangles(void(*fragmentShader)(Point<N>&),
             continue;
 
         // BackFace or FrontFace Culling
-        float C =   -vs[i1].x*(vs[i2].y*vs[i3].z - vs[i3].y*vs[i2].z)
-                    -vs[i2].x*(vs[i3].y*vs[i1].z - vs[i1].y*vs[i3].z)
-                    -vs[i3].x*(vs[i1].y*vs[i2].z - vs[i2].y*vs[i1].z);
-        // Triangle is back-face if normal of triangle has z-component(C) >= 0 (Anticlockwise is FrontFace)
+        static int C = 0;
+        C = (points[i2].x-points[i1].x) * (points[i3].y-points[i1].y)
+                - (points[i3].x-points[i1].x) * (points[i2].y-points[i1].y);
         if (backfaceVisible?C > 0:C < 0)
            renderer->DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
     }

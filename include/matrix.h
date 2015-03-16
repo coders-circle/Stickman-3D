@@ -87,6 +87,8 @@ public:
     }
 };
 
+class mat4;
+inline std::ostream& operator << (std::ostream &os, const mat4 &m);
 class mat4
 {
 public:
@@ -136,38 +138,45 @@ public:
 
     mat4 operator+ (const mat4& m2) const
     {
-        /*return mat4(
+#ifndef USE_SSE
+        return mat4(
             m[0][0] + m2.m[0][0], m[0][1] + m2.m[0][1], m[0][2] + m2.m[0][2], m[0][3] + m2.m[0][3],
             m[1][0] + m2.m[1][0], m[1][1] + m2.m[1][1], m[1][2] + m2.m[1][2], m[1][3] + m2.m[1][3],
             m[2][0] + m2.m[2][0], m[2][1] + m2.m[2][1], m[2][2] + m2.m[2][2], m[2][3] + m2.m[2][3],
             m[3][0] + m2.m[3][0], m[3][1] + m2.m[3][1], m[3][2] + m2.m[3][2], m[3][3] + m2.m[3][3]
-        );*/
+        );
+#else
         return mat4(
             (*this)[0] + m2[0],
             (*this)[1] + m2[1],
             (*this)[2] + m2[2],
             (*this)[3] + m2[3]
         );
+#endif
     }
 
     mat4 operator- (const mat4& m2) const
     {
-        /*return mat4(
+#ifndef USE_SSE
+        return mat4(
             m[0][0] - m2.m[0][0], m[0][1] - m2.m[0][1], m[0][2] - m2.m[0][2], m[0][3] - m2.m[0][3],
             m[1][0] - m2.m[1][0], m[1][1] - m2.m[1][1], m[1][2] - m2.m[1][2], m[1][3] - m2.m[1][3],
             m[2][0] - m2.m[2][0], m[2][1] - m2.m[2][1], m[2][2] - m2.m[2][2], m[2][3] - m2.m[2][3],
             m[3][0] - m2.m[3][0], m[3][1] - m2.m[3][1], m[3][2] - m2.m[3][2], m[3][3] - m2.m[3][3]
-        );*/
+        );
+#else
         return mat4(
             (*this)[0] - m2[0],
             (*this)[1] - m2[1],
             (*this)[2] - m2[2],
             (*this)[3] - m2[3]
         );
+#endif
     }
 
     mat4 operator* (const mat4& m2) const
     {
+#ifndef USE_SSE
         return mat4(
             (m[0][0]*m2.m[0][0] + m[0][1]*m2.m[1][0] + m[0][2]*m2.m[2][0] + m[0][3]*m2.m[3][0]),
             (m[0][0]*m2.m[0][1] + m[0][1]*m2.m[1][1] + m[0][2]*m2.m[2][1] + m[0][3]*m2.m[3][1]),
@@ -185,19 +194,25 @@ public:
             (m[3][0]*m2.m[0][1] + m[3][1]*m2.m[1][1] + m[3][2]*m2.m[2][1] + m[3][3]*m2.m[3][1]),
             (m[3][0]*m2.m[0][2] + m[3][1]*m2.m[1][2] + m[3][2]*m2.m[2][2] + m[3][3]*m2.m[3][2]),
             (m[3][0]*m2.m[0][3] + m[3][1]*m2.m[1][3] + m[3][2]*m2.m[2][3] + m[3][3]*m2.m[3][3])
-        );/*/
+        );
+#else
         mat4 temp = m2.Transpose();
         return mat4(
             (*this)[0].Dot(temp[0]), (*this)[0].Dot(temp[1]), (*this)[0].Dot(temp[2]), (*this)[0].Dot(temp[3]), 
             (*this)[1].Dot(temp[0]), (*this)[1].Dot(temp[1]), (*this)[1].Dot(temp[2]), (*this)[1].Dot(temp[3]), 
             (*this)[2].Dot(temp[0]), (*this)[2].Dot(temp[1]), (*this)[2].Dot(temp[2]), (*this)[2].Dot(temp[3]), 
             (*this)[3].Dot(temp[0]), (*this)[3].Dot(temp[1]), (*this)[3].Dot(temp[2]), (*this)[3].Dot(temp[3])
-        );*/
+        );
+#endif
     }
     vec4 Column(int i) const
     {
+#ifndef USE_SSE
+        return vec4(m[0][i], m[1][i], m[2][i], m[3][i]);
+#else
         float fs[4] = { m[0][i], m[1][i], m[2][i], m[3][i] };
         return vec4(_mm_load_ps(fs));
+#endif
     }
     vec4 Row(int i) const
     {
@@ -205,27 +220,32 @@ public:
     }
     vec4 operator* (const vec4& v) const
     {
-        /*return vec4(
+#ifndef USE_SSE
+        return vec4(
             (m[0][0]*v.x + m[0][1]*v.y + m[0][2]*v.z + m[0][3]*v.w),
             (m[1][0]*v.x + m[1][1]*v.y + m[1][2]*v.z + m[1][3]*v.w),
             (m[2][0]*v.x + m[2][1]*v.y + m[2][2]*v.z + m[2][3]*v.w),
             (m[3][0]*v.x + m[3][1]*v.y + m[3][2]*v.z + m[3][3]*v.w)
-        );*/
+        );
+#else
         return vec4(
             (*this)[0].Dot(v), 
             (*this)[1].Dot(v), 
             (*this)[2].Dot(v), 
             (*this)[3].Dot(v)
         );
+#endif
     }
     mat4 operator* (float f) const
     {
-        /*return mat4(
+#ifndef USE_SSE
+        return mat4(
             m[0][0]*f, m[0][1]*f, m[0][2]*f, m[0][3]*f,
             m[1][0]*f, m[1][1]*f, m[1][2]*f, m[1][3]*f,
             m[2][0]*f, m[2][1]*f, m[2][2]*f, m[2][3]*f,
             m[3][0]*f, m[3][1]*f, m[3][2]*f, m[3][3]*f
-        );*/
+        );
+#else
         vec4 v(_mm_set1_ps(f));
         return mat4(
             (*this)[0] * v,
@@ -233,14 +253,23 @@ public:
             (*this)[2] * v,
             (*this)[3] * v
         );
- 
+#endif
     }
 
     mat4 Transpose() const
     {
-         mat4 temp = *this;
-        //_MM_TRANSPOSE4_PS(temp[0].xyzw, temp[1].xyzw, temp[2].xyzw, temp[3].xyzw);
+#ifndef USE_SSE
+        return mat4(
+            m[0][0], m[1][0], m[2][0], m[3][0],
+            m[0][1], m[1][1], m[2][1], m[3][1],
+            m[0][2], m[1][2], m[2][2], m[3][2],
+            m[0][3], m[1][3], m[2][3], m[3][3]
+        );
+#else
+        mat4 temp = *this;
+        _MM_TRANSPOSE4_PS(temp[0].xyzw, temp[1].xyzw, temp[2].xyzw, temp[3].xyzw);
         return temp;
+#endif
     }
 
     operator mat3() const
@@ -250,6 +279,20 @@ public:
             m[1][0], m[1][1], m[1][2],
             m[2][0], m[2][1], m[2][2]
         );
+    }
+
+    mat4 AffineInverse() const
+    {
+        mat4 temp(*this);
+        temp = temp.Transpose();
+        temp[3] = vec4(0,0,0,1);
+        vec3 tv = -this->Column(3);
+        vec4 translation = temp * vec4(tv, (*this)[3][3]);
+        temp[0][3] = translation[0];
+        temp[1][3] = translation[1];
+        temp[2][3] = translation[2];
+        temp[3][3] = translation[3];
+        return temp;
     }
 };
 
