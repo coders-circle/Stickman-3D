@@ -55,17 +55,17 @@ public:
     
     template<int N>
     void DrawTriangles(void(*fragmentShader)(Point<N>&), uint16_t* indexBuffer, size_t numTriangles, bool backfaceVisible,
-                        vec4* vs, Point<N>* points, int offset=0);
+                        vec4* vs, Point<N>* points, bool transparency = false, int offset=0);
 
     template<int N>
     void DrawTrianglesThreaded(void(*fragmentShader)(Point<N>&), uint16_t* indexBuffer, size_t numTriangles, bool backfaceVisible,
-                        vec4* vs, Point<N>* points)
+                        vec4* vs, Point<N>* points, bool transparency = false)
     {
         
         runningThreads = NUM_THREADS;
-        draw = [this, fragmentShader, indexBuffer, backfaceVisible, vs, points]
+        draw = [this, fragmentShader, indexBuffer, backfaceVisible, vs, points, transparency]
                (int offset, size_t numTriangles) {
-                  DrawTriangles(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points, offset);
+                  DrawTriangles(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points, transparency, offset);
               };
         for (int i=0; i<NUM_THREADS; ++i)
         {

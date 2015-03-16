@@ -6,6 +6,7 @@
 #include <math.h>
 #include <functional> 
 #include <vector>
+#include <map>
 #include <fstream>
 #include <string>
 #include <unordered_map>

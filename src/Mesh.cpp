@@ -1,5 +1,160 @@
 #include <common.h>
 #include <Mesh.h>
+#include <transform.h>
+
+Mesh::Mesh() : m_animation(NULL) {}
+
+Mesh::~Mesh()
+{
+    if (m_animation)
+        delete m_animation;
+}
+
+void Mesh::ReadNode(std::fstream& file, Node* node)
+{
+    unsigned int id, nChildren;
+    file.read((char*)&id, sizeof(id));
+    file.read((char*)&nChildren, sizeof(nChildren));
+    m_animation->map[id] = node;
+    node->children.resize(nChildren);
+    for (unsigned int i=0; i<nChildren; ++i)
+        ReadNode(file, &node->children[i]);
+}
+void Mesh::LoadAnimatedFile(const std::string &filename)
+{
+    if (!m_animation)
+        m_animation = new AnimationInfo();
+
+    std::fstream file;
+    file.open(filename, std::ios::binary | std::ios::in);
+    if (!file.good())
+    {
+        std::cout << "Couldn't load mesh from file: " << filename << std::endl;
+        return;
+    }
+
+    ReadNode(file, &m_animation->root);
+
+    std::vector<size_t> wtcnt;
+
+    uint32_t nvertices;
+    file.read((char*)&nvertices, sizeof(nvertices));
+    m_vertices.resize(nvertices);
+    m_animation->skin.resize(nvertices);
+    m_animation->tempVertices.resize(nvertices);
+    wtcnt.resize(nvertices, 0);
+
+    file.read((char*)&m_vertices[0], nvertices*sizeof(Vertex));
+
+    uint32_t nindices;
+    file.read((char*)&nindices, sizeof(nindices));
+    m_indices.resize(nindices);
+    file.read((char*)&m_indices[0], nindices*sizeof(uint16_t));
+
+
+    uint32_t nBones;
+    file.read((char*)&nBones, sizeof(nBones));
+    m_animation->bones.resize(nBones);
+    for (size_t j=0; j<nBones; ++j)
+    {
+        Bone& bn = m_animation->bones[j];
+        unsigned int id;
+        file.read((char*)&id, sizeof(id));
+        bn.node = m_animation->map[id];
+        file.read((char*)&bn.offset, sizeof(bn.offset));
+
+        uint32_t nWeights;
+        file.read((char*)&nWeights, sizeof(nWeights));
+        
+        struct VWeight
+        {
+            unsigned int vid;
+            float wt;
+        };
+        std::vector<VWeight> weights(nWeights);
+        file.read((char*)&weights[0], sizeof(VWeight)*nWeights);
+        
+        for (size_t k=0; k<nWeights; ++k)
+        {
+            size_t wtid = wtcnt[weights[k].vid]++;
+            m_animation->skin[weights[k].vid].weights[wtid] = weights[k].wt;
+            m_animation->skin[weights[k].vid].boneids[wtid] = j;
+        }
+    }
+   
+    Animation &anim = m_animation->animation;
+    file.read((char*)&anim.duration, sizeof(anim.duration));
+    uint32_t anum;
+    file.read((char*)&anum, sizeof(anum));
+    anim.data.resize(anum);
+    for (size_t j=0; j<anum; ++j)
+    {
+        NodeAnim& nd = anim.data[j];
+        unsigned int id;
+        file.read((char*)&id, sizeof(id));
+        nd.node = m_animation->map[id];
+        unsigned int knum;
+        file.read((char*)&knum, sizeof(knum));
+        nd.posKeys.resize(knum);
+        file.read((char*)&knum, sizeof(knum));
+        nd.rotKeys.resize(knum);
+        file.read((char*)&nd.posKeys[0], sizeof(VecKey)*nd.posKeys.size());
+        file.read((char*)&nd.rotKeys[0], sizeof(RotKey)*nd.rotKeys.size());
+    }
+
+    file.close();
+}
+
+void Mesh::Animate(double time)
+{
+    for (size_t i=0; i<m_animation->animation.data.size(); ++i)
+    {
+        NodeAnim& nd = m_animation->animation.data[i];
+        size_t pk = 0, rk = 0;
+
+        for (size_t j=1; j<nd.posKeys.size(); ++j)
+            if (nd.posKeys[j].time > time)
+            {
+                pk = j-1;
+                break;
+            }
+
+        for (size_t j=1; j<nd.rotKeys.size(); ++j)
+            if (nd.rotKeys[j].time > time)
+            {
+                rk = j-1;
+                break;
+            }
+
+        size_t npk = (pk + 1);//%nd.posKeys.size();
+        size_t nrk = (rk + 1);//%nd.rotKeys.size();
+
+        double dp = nd.posKeys[npk].time - nd.posKeys[pk].time;
+        double dr = nd.rotKeys[nrk].time - nd.rotKeys[rk].time;
+
+        float pf = 0.0f, rf = 0.0f;
+        if (dp != 0)
+            pf = float((time-nd.posKeys[pk].time)/dp);
+        if (dr != 0)
+            rf = float((time-nd.rotKeys[rk].time)/dr);
+
+        vec3 pos = nd.posKeys[pk].vec + (nd.posKeys[npk].vec - nd.posKeys[pk].vec)*pf;
+        quat rot = nd.rotKeys[rk].rot + (nd.rotKeys[nrk].rot - nd.rotKeys[rk].rot)*rf;
+        nd.node->transform = Translate(pos) * mat4(rot);
+    }
+
+    UpdateNode(m_animation->root);
+}
+
+void Mesh::UpdateNode(Node& node, Node* parent)
+{
+    if (parent)
+        node.combined_transform = parent->combined_transform * node.transform;
+    else
+        node.combined_transform = node.transform;
+    for (size_t i=0; i<node.children.size(); ++i)
+        UpdateNode(node.children[i], &node);
+}
 
 void Mesh::LoadFile(const std::string &filename)
 {
@@ -20,6 +175,8 @@ void Mesh::LoadFile(const std::string &filename)
     file.read((char*)&nindices, sizeof(nindices));
     m_indices.resize(nindices);
     file.read((char*)&m_indices[0], nindices*sizeof(uint16_t));
+
+    file.close();
 }
 
 void Mesh::LoadBox(float x, float y, float z)

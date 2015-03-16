@@ -1,5 +1,5 @@
 #pragma once
-#include "matrix.h"
+#include "quat.h"
 #include "Timer.h"
 #include "Rasterizer.h"
 #include <RenderThreadManager.h>
@@ -18,16 +18,43 @@ public:
     void MainLoop();
     void CleanUp();
     
-    void PutPixel(int x, int y, RGBColor color)
+    void PutPixel(int x, int y, const RGBColor &color)
     {
         if (y > m_height || x > m_width)
             return;
-        m_framebuffer[y*m_width + x] = (0xFF << 24) | (color.r << 16) | (color.g << 8) | color.b;
+        PutPixelUnsafe(x, y, color);
     }
     // (Maybe) faster due to no validity check
-    void PutPixelUnsafe(int x, int y, RGBColor color)
+    void PutPixelUnsafe(int x, int y, const RGBColor &color)
     {
         m_framebuffer[y*m_width + x] = (0xFF << 24) | (color.r << 16) | (color.g << 8) | color.b;
+    }
+
+    // Alpha/Transparency capabilities
+    void PutPixel(int x, int y, const RGBColor &color, float alpha)
+    {
+        if (y > m_height || x > m_width)
+            return;
+        PutPixelUnsafe(x, y, color, alpha);
+    }
+    void PutPixelUnsafe(int x, int y, RGBColor color, float alpha)
+    {
+        if (alpha == 0.0f)
+            return;
+        if (alpha < 1.0f)
+        {
+            RGBColor d = GetPixel(x, y);
+            color.r = uint8_t(d.r * alpha + color.r * (1.0f-alpha));
+            color.g = uint8_t(d.g * alpha + color.g * (1.0f-alpha));
+            color.b = uint8_t(d.b * alpha + color.b * (1.0f-alpha));
+        }
+        m_framebuffer[y*m_width + x] = (0xFF << 24) | (color.r << 16) | (color.g << 8) | color.b;
+    }
+    
+    RGBColor GetPixel(int x, int y)
+    {
+        uint32_t color = m_framebuffer[y*m_width + x];
+        return RGBColor((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
     }
 
     void SetRenderCallback(std::function<void()> renderCallback) { m_render = renderCallback; }
@@ -36,16 +63,16 @@ public:
 
     // Draw a triangle from from pixel points
     template<int N>
-    void DrawTriangle(Point<N> &pt1, Point<N> &pt2, Point<N> &pt3, void (*fragmentShader)(Point<N>&))
+    void DrawTriangle(Point<N> &pt1, Point<N> &pt2, Point<N> &pt3, void (*fragmentShader)(Point<N>&), bool transparency = false)
     {
-        Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, fragmentShader, m_width, m_height, m_depthBuffers[m_depthBufferId]); 
+        Rasterizer::DrawTriangle(&pt1, &pt2, &pt3, fragmentShader, m_width, m_height, m_depthBuffers[m_depthBufferId], transparency); 
     }
     
     // Draw triangles with given vertices and indices
     //  The vertices are passed through the vertexShader function
     //  and rasterized. Each pixel is then passed through the framentShader function
     template<int N, class Args>
-    void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, size_t numVertices, uint16_t* indexBuffer, size_t numTriangles, bool backfaceVisible = false)
+    void DrawTriangles(vec4(*vertexShader)(vec4[], const Args&), void(*fragmentShader)(Point<N>&), Args* vertexBuffer, size_t numVertices, uint16_t* indexBuffer, size_t numTriangles, bool backfaceVisible = false, bool transparency = false)
     {
         vec4* vs = new vec4[numVertices];                // array to carry the clip-space vertices returned by vertexBuffer
         Point<N>* points = new Point<N>[numVertices];    // array to carry window space points and their attributes
@@ -53,9 +80,9 @@ public:
         ProcessVertices(points, vs, vertexShader, vertexBuffer, numVertices);
         
 #ifndef USE_MULTITHREADING
-        m_threader.DrawTriangles(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
+        m_threader.DrawTriangles(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points, transparency);
 #else
-        m_threader.DrawTrianglesThreaded(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points);
+        m_threader.DrawTrianglesThreaded(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points, transparency);
 #endif
         
         delete[] points;
@@ -179,15 +206,15 @@ template<Renderer& renderer, class VertexType, int NoOfAttributes,
 class Shaders
 {
 public:
-    void DrawTriangles(std::vector<VertexType>& vertices, std::vector<uint16_t>& indices)
+    void DrawTriangles(std::vector<VertexType>& vertices, std::vector<uint16_t>& indices, bool transparency=false)
     {
-        renderer.DrawTriangles(vertexShader, fragmentShader, &vertices[0], vertices.size(), &indices[0], indices.size()/3, backfaceVisible);
+        renderer.DrawTriangles(vertexShader, fragmentShader, &vertices[0], vertices.size(), &indices[0], indices.size()/3, backfaceVisible, transparency);
     }
 };
 
 template<int N>
 inline void RenderThreadManager::DrawTriangles(void(*fragmentShader)(Point<N>&), uint16_t* indexBuffer, size_t numTriangles, bool backfaceVisible,
-                    vec4* vs, Point<N>* points, int offset)
+                    vec4* vs, Point<N>* points, bool transparency, int offset)
 {
     indexBuffer += offset*3;
     for (size_t i=0; i<numTriangles; ++i)
@@ -208,6 +235,6 @@ inline void RenderThreadManager::DrawTriangles(void(*fragmentShader)(Point<N>&),
         C = (points[i2].x-points[i1].x) * (points[i3].y-points[i1].y)
                 - (points[i3].x-points[i1].x) * (points[i2].y-points[i1].y);
         if (backfaceVisible?C > 0:C < 0)
-           renderer->DrawTriangle(points[i1], points[i2], points[i3], fragmentShader);
+           renderer->DrawTriangle(points[i1], points[i2], points[i3], fragmentShader, transparency);
     }
 }

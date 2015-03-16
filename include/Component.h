@@ -66,11 +66,12 @@ struct MeshComponent : public Component<COMPONENT_TYPE(MESH_COMPONENT+MaterialCl
     // Compile-time test for correct Material Class : "MaterialClass" must be derived from Material
     static_assert(std::is_base_of<Material, MaterialClass>::value, "Invalid Material Class");
 
-    MeshComponent(const Mesh& mesh, float scale=1.0f) : mesh(mesh), scale(scale) {}
-    MeshComponent(float scale=1.0f) : scale(scale) {}
+    MeshComponent(const Mesh& mesh, float scale=1.0f, bool transparent=false) : mesh(mesh), scale(scale), transparent(transparent) {}
+    MeshComponent(float scale=1.0f, bool transparent=false) : scale(scale), transparent(transparent) {}
     Mesh mesh; 
     MaterialClass material;
     float scale;
+    bool transparent;
 };
 
 class CameraSystem;

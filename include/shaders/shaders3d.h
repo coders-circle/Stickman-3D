@@ -13,7 +13,7 @@ public:
     {
         float depthBias;
         size_t textureId;
-        vec3 diffuseColor;
+        vec4 diffuseColor;
 #ifdef SPECULAR_SHADERS
         vec3 specularColor;
         float shininess;
@@ -116,7 +116,7 @@ public:
         c = c * visibility;
     
         c = c * texcolor;
-        g_renderer.PutPixel(point.pos[0], point.pos[1], c);     // Use the calculated color to plot the pixel
+        g_renderer.PutPixelUnsafe(point.pos[0], point.pos[1], c, uniforms.diffuseColor.a);     // Use the calculated color to plot the pixel
     }
 
     typedef Shaders<g_renderer, Vertex, ATTRIBUTES_NUM, &VertexShader, &FragmentShader> ShadersType;

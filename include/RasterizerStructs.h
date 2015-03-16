@@ -90,7 +90,7 @@ public:
     {
         ++y;
         d += dincr;
-        w+= wincr;
+        w += wincr;
 
         for (int i=0; i<N; ++i)
             attrs[i] = attrs[i] + attrs_incr[i];
@@ -113,18 +113,18 @@ class Pair
 {
 public:
     Edge<N> *e1, *e2;
+    Edge<N> *le, *se;
     Pair(Edge<N> *_e1, Edge<N>*_e2)
-    : e1(_e1), e2(_e2)
+    : e1(_e1), e2(_e2), le(_e1), se(_e2)
     {
           if (e1->p1->pos[0] > e2->p1->pos[0])
             Swap(e1, e2);
-          
     }
     
     // Get next Y for each edge
     bool NextY()
-    {    
-        if (!e1->NextY() || !e2->NextY())
+    {
+        if (!se->NextY() || !le->NextY())
             return false;
         if (e1->x > e2->x)
             Swap(e1, e2);

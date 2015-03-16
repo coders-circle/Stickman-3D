@@ -37,18 +37,18 @@ mat4 bias_matrix
     0, 0, 0, 1
 );
 
-float angle=45.0f*3.1415f/180.0f;
+float angle=(180)*3.1415f/180.0f;
 // Render objects
 void Render()
 {
     // Some animations
     auto trans = g_entities[0].GetComponent<TransformComponent>();
-    trans->SetRotation(vec3(-90*3.1415f/180.0f, angle, 0));
-    trans = g_entities[2].GetComponent<TransformComponent>();
-    trans->SetRotation(vec3(0, -angle, 0));
+    //trans->SetRotation(vec3(-90*3.1415f/180.0f, angle, 0));
+    //trans = g_entities[2].GetComponent<TransformComponent>();
+    //trans->SetRotation(vec3(0, -angle, 0));
 
     trans = g_entities[3].GetComponent<TransformComponent>();
-    trans->SetTransform(LookAt(vec3(cosf(angle/10)*4, 2, sinf(angle/10)*4), vec3(0,0,0), vec3(0,1,0)).AffineInverse());
+    trans->SetTransform(LookAt(vec3(cosf(angle)*4, 2, sinf(angle)*4), vec3(0,0,0), vec3(0,1,0)).AffineInverse());
 
     // First Pass:
     // Create depth buffer in light space
@@ -63,6 +63,11 @@ void Render()
     g_renderer.ClearColorAndDepth();
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->Render();
+
+    // Third Pass:
+    // Render the scene with transparent objects
+    for (size_t i=0; i<g_systems.size(); ++i)
+        g_systems[i]->PostRender();
 }
 
 // On resize of window, we calculate the projection matrix
@@ -76,12 +81,22 @@ void Resize(int width, int height)
         g_systems[i]->Resize(width, height);
 }
 
+double animtime;
+Mesh* g_stickmesh = NULL;
 // Update each frame by time-step dt
 void Update(double dt)
 {
-    angle += float(dt);
+    angle += float(dt/10);
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->Update(dt);
+
+    if (g_stickmesh)
+    {
+        animtime += dt/4;
+        if (animtime > g_stickmesh->GetAnimation()->duration)
+            animtime -= g_stickmesh->GetAnimation()->duration;
+        g_stickmesh->Animate(animtime);
+    }
 }
 
 #ifdef _WIN32
@@ -118,7 +133,7 @@ int main()
     g_systems.push_back(&specularRenderSystem);
 
     // Create some entities
-    g_entities.resize(4);
+    g_entities.resize(5);
     
     // MeshComponent<MaterialType> is a component to store a mesh and a material
     typedef MeshComponent<DiffuseMaterial> DiffuseMeshComponent;  // DiffuseMaterial supports diffuse color, texture and shadow on surface
@@ -126,15 +141,16 @@ int main()
     
     // Stickman entity, with mesh loaded from file
     auto msc = g_entities[0].AddComponent<SpecularMeshComponent>(0.25f);
-    msc->mesh.LoadFile("test.dat");
+    g_stickmesh = &msc->mesh;
+    msc->mesh.LoadAnimatedFile("test1.dat");
     msc->material.depthBias = 0.05f;
-    msc->material.shininess = 7.0f;
+    msc->material.shininess = 20.0f;
     msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
-    g_entities[0].AddComponent<TransformComponent>(vec3(0,-1,0), vec3(-90*3.1415f/180.0f,0,0));
+    g_entities[0].AddComponent<TransformComponent>(vec3(0,1.0f,0), vec3(-90*3.1415f/180.0f,0,0));
     
     // Ground entity, with box mesh and green diffuse color
     auto mc = g_entities[1].AddComponent<DiffuseMeshComponent>();
-    mc->mesh.LoadBox(3.0f, 0.05f, 3.0f);
+    mc->mesh.LoadBox(3.0f, 0.05f, 3.0f);        // Larger than this ground size seems to give problems while shadow mapping; so use smaller pieces of ground entities instead of one large box
     mc->material.depthBias = 0.0f;
     mc->material.diffuseColor = vec3(0.0f, 1.0f, 0.0f);
     g_entities[1].AddComponent<TransformComponent>(vec3(0,-1.05f,0));
@@ -142,6 +158,7 @@ int main()
     // Cube entity, with box mesh and texture loaded from file
     mc = g_entities[2].AddComponent<DiffuseMeshComponent>(1.0f);
     mc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
+    //mc->mesh.LoadSphere(0.7f, 40, 40);
     mc->material.depthBias = 0.008f;
     mc->material.textureId = g_textureManager.AddTexture("grass_T.bmp");
     g_entities[2].AddComponent<TransformComponent>(vec3(2,-0.5f,-1));
@@ -150,7 +167,19 @@ int main()
     g_entities[3].AddComponent<CameraComponent>();
     auto t = g_entities[3].AddComponent<TransformComponent>();
     t->SetTransform(LookAt(vec3(-3, 2.0f, -3.0f), vec3(0,1,0), vec3(0,1,0)).AffineInverse());
-    
+ 
+    // Test transparent entity
+    msc = g_entities[4].AddComponent<SpecularMeshComponent>();
+    msc->mesh.LoadSphere(0.5f, 30, 30);
+    //msc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
+    msc->material.depthBias = 0.0f;
+    msc->material.diffuseColor = vec4(1, 0, 0, 0.4f);
+    msc->material.shininess = 20.0f;
+    msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
+    msc->transparent = true;
+    g_entities[4].AddComponent<TransformComponent>(vec3(-1.05f, 0, 0));
+
+
     // Add entities to all systems and initialize the systems
     for (size_t j=0; j<g_systems.size(); ++j)
     {

@@ -1,5 +1,6 @@
 #pragma once
 #include "matrix.h"
+#include "quat.h"
 
 inline mat4 Translate(const vec3& v)
 {
