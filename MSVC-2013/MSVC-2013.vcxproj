@@ -45,6 +45,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SDL2_ROOT)\include;$(SolutionDir)\..\include;</AdditionalIncludeDirectories>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -53,12 +54,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Full</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SDL2_ROOT)\include;$(SolutionDir)\..\include;</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -70,8 +72,12 @@
     <ClInclude Include="..\include\Bitmap.h" />
     <ClInclude Include="..\include\common.h" />
     <ClInclude Include="..\include\matrix.h" />
+    <ClInclude Include="..\include\Mesh.h" />
     <ClInclude Include="..\include\Rasterizer.h" />
+    <ClInclude Include="..\include\RasterizerStructs.h" />
     <ClInclude Include="..\include\Renderer.h" />
+    <ClInclude Include="..\include\RenderThreadManager.h" />
+    <ClInclude Include="..\include\TextureManager.h" />
     <ClInclude Include="..\include\Timer.h" />
     <ClInclude Include="..\include\transform.h" />
     <ClInclude Include="..\include\vector.h" />

@@ -42,7 +42,7 @@ public:
         while (!destroy)
         {
             if (!running[i])
-                std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(0.001));
+                 std::this_thread::sleep_for(std::chrono::nanoseconds(1));
             else
             {
                 draw(m_offset[i], m_numTriangles[i]);
@@ -61,24 +61,28 @@ public:
     void DrawTrianglesThreaded(void(*fragmentShader)(Point<N>&), uint16_t* indexBuffer, size_t numTriangles, bool backfaceVisible,
                         vec4* vs, Point<N>* points, bool transparency = false)
     {
+        
         runningThreads = NUM_THREADS;
         draw = [this, fragmentShader, indexBuffer, backfaceVisible, vs, points, transparency]
                (int offset, size_t numTriangles) {
                   DrawTriangles(fragmentShader, indexBuffer, numTriangles, backfaceVisible, vs, points, transparency, offset);
               };
-
         for (int i=0; i<NUM_THREADS; ++i)
         {
             m_numTriangles[i] = numTriangles/NUM_THREADS;
-            m_offset[i] = i * (int)m_numTriangles[i];
-            if (i==NUM_THREADS-1)
+            if (i == 0){ 
                 m_numTriangles[i] += numTriangles%NUM_THREADS;
+                m_offset[i] = 0;
+            }
+            else m_offset[i] = m_offset[i-1] + (int)m_numTriangles[i-1];
 
             running[i] = true;
         }
 
-        while (runningThreads>0)
-             ;//std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+        while (runningThreads > 0)
+            ;// std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+
+        
     }
     
 };
