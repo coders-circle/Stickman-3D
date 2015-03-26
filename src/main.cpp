@@ -48,7 +48,7 @@ void Render()
     //trans->SetRotation(vec3(0, -angle, 0));
 
     trans = g_entities[3].GetComponent<TransformComponent>();
-    trans->SetTransform(LookAt(vec3(cosf(angle)*4, 2, sinf(angle)*4), vec3(0,0,0), vec3(0,1,0)).AffineInverse());
+    trans->SetTransform(LookAt(vec3(cosf(angle)*5, 2, sinf(angle)*5), vec3(0,0,0), vec3(0,1,0)).AffineInverse());
 
     // First Pass:
     // Create depth buffer in light space
@@ -86,7 +86,48 @@ Mesh* g_stickmesh = NULL;
 // Update each frame by time-step dt
 void Update(double dt)
 {
-    angle += float(dt/10);
+    //angle += float(dt/10);
+    const uint8_t* keys = SDL_GetKeyboardState(NULL);
+    auto trans = g_entities[0].GetComponent<TransformComponent>();
+    vec3 rot = trans->GetRotation();
+    if (keys[SDL_SCANCODE_RIGHT])
+        rot[1] += (float)dt;
+    if (keys[SDL_SCANCODE_LEFT])
+        rot[1] -= (float)dt;
+    trans->SetRotation(rot);
+    mat3 t = EulerXYZ(rot);
+    vec3 pos = trans->GetPosition();
+
+    vec3 dir(t[0][0], t[1][0], t[2][0]);
+    /*if (keys[SDL_SCANCODE_A])
+        pos = pos + dir*(float)dt*0.5f; 
+    if (keys[SDL_SCANCODE_D])
+        pos = pos - dir*(float)dt*0.5f; */
+
+    dir = dir.Cross(vec3(0, 1, 0));
+    if (keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_UP])
+        pos = pos + dir*(float)dt*0.5f; 
+    if (keys[SDL_SCANCODE_S] || keys[SDL_SCANCODE_DOWN])
+        pos = pos - dir*(float)dt*0.5f; 
+    trans->SetPosition(pos);
+
+    
+    if (keys[SDL_SCANCODE_K])
+    {
+        g_renderer.light.direction = RotateY((float)dt) * g_renderer.light.direction;
+        Resize(g_renderer.GetWidth(), g_renderer.GetHeight());
+    }
+    if (keys[SDL_SCANCODE_J])
+    {
+        g_renderer.light.direction = RotateY(-(float)dt) * g_renderer.light.direction;
+        Resize(g_renderer.GetWidth(), g_renderer.GetHeight());
+    }
+
+    if (keys[SDL_SCANCODE_Q])
+        angle += (float)dt;
+    if (keys[SDL_SCANCODE_E])
+        angle -= (float)dt;
+
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->Update(dt);
 
@@ -140,13 +181,13 @@ int main()
     typedef MeshComponent<SpecularMaterial> SpecularMeshComponent; // SpecularMaterial also supports a specular color and shininess
     
     // Stickman entity, with mesh loaded from file
-    auto msc = g_entities[0].AddComponent<SpecularMeshComponent>(0.25f);
+    auto msc = g_entities[0].AddComponent<SpecularMeshComponent>(0.15f);
     g_stickmesh = &msc->mesh;
     msc->mesh.LoadAnimatedFile("test1.dat");
     msc->material.depthBias = 0.05f;
     msc->material.shininess = 20.0f;
     msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
-    g_entities[0].AddComponent<TransformComponent>(vec3(0,1.0f,0), vec3(-90*3.1415f/180.0f,0,0));
+    g_entities[0].AddComponent<TransformComponent>(vec3(0,0.07f,0), vec3(-90*3.1415f/180.0f,0,0));
     
     // Ground entity, with box mesh and green diffuse color
     auto mc = g_entities[1].AddComponent<DiffuseMeshComponent>();
