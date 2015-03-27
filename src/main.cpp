@@ -4,6 +4,8 @@
 #include <TextureManager.h>
 #include <Mesh.h>
 
+//#define TOON_SHADING
+
 // Shaders to generate depth buffer in light space
 #include <shaders/depth_shaders3d.h>
 
@@ -112,11 +114,11 @@ void Update(double dt)
 
     dir = dir.Cross(vec3(0, 1, 0));
     if (keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_UP]) {
-        pos = pos + dir*(float)dt*0.5f; 
+        pos = pos + dir*(float)dt*0.4f; 
         animating = true;
     }
     if (keys[SDL_SCANCODE_S] || keys[SDL_SCANCODE_DOWN]) {
-        pos = pos - dir*(float)dt*0.5f; 
+        pos = pos - dir*(float)dt*0.4f; 
         animating = true;
     }
     trans->SetPosition(pos);
@@ -143,7 +145,7 @@ void Update(double dt)
 
     if (g_stickmesh && animating)
     {
-        animtime += dt/4;
+        animtime += dt*2;
         if (animtime > g_stickmesh->GetAnimation()->duration)
             animtime -= g_stickmesh->GetAnimation()->duration;
         g_stickmesh->Animate(animtime);
@@ -193,7 +195,6 @@ int main()
     typedef MeshComponent<SpecularMaterial> SpecularMeshComponent; // SpecularMaterial also supports a specular color and shininess
     typedef MeshComponent<ToonMaterial> ToonMeshComponent;          // ToonMaterial only supports a color and performs toon shading
 
-//#define TOON_SHADING
     
     // Stickman entity, with mesh loaded from file
 #ifdef TOON_SHADING
@@ -222,7 +223,7 @@ int main()
     // Cube entity, with box mesh and texture loaded from file
 #ifdef TOON_SHADING
     mc = g_entities[2].AddComponent<ToonMeshComponent>(1.0f);
-    mc->material.diffuseColor = vec3(0.0f, 0.0f, 1.0f);
+    mc->material.diffuseColor = vec3(0x33/255.0f, 0.0f, 0.0f);
 #else
     mc = g_entities[2].AddComponent<DiffuseMeshComponent>(1.0f);
     mc->material.depthBias = 0.008f;

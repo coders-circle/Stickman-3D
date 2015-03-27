@@ -59,7 +59,7 @@ int main()
     try
     {
         Assimp::Importer importer;
-        const std::string iFilename = "StickmanAnim.dae";
+        const std::string iFilename = "StickmanWalking.dae";
         const std::string oFilename = "test1.dat";
 
         const aiScene* scene = importer.ReadFile(iFilename.c_str(),
