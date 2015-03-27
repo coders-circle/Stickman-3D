@@ -8,3 +8,8 @@ DiffuseShaders::ShadersType DiffuseShaders::shaders;
 
 SpecularShaders::Uniforms SpecularShaders::uniforms;
 SpecularShaders::ShadersType SpecularShaders::shaders;
+
+CellShaders::Uniforms CellShaders::uniforms;
+CellShaders::ShadersType CellShaders::shaders;
+
+

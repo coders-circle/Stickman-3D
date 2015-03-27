@@ -4,7 +4,7 @@
 #include "Rasterizer.h"
 #include <RenderThreadManager.h>
 
-#define USE_MULTITHREADING
+//#define USE_MULTITHREADING
 
 // Renderer responsible for managing the window
 //  and drawing pixels and triangles

@@ -274,5 +274,73 @@ void Mesh::LoadSphere(float radius, uint16_t rings, uint16_t sectors)
     
 }
 
-// Instantiation with each material class to avoid linking issues
-//template class Mesh<TextureShadowMaterial>;
+void Mesh::LoadCone(float radius, float height, unsigned sides)
+{
+    std::vector<Vertex>& vertices = m_vertices;
+    vertices.resize(sides * 2 + 2);
+    float theta = 0, tu = 0;
+    for (unsigned i = 0; i < sides; ++i)
+    {
+        float const x = cosf(theta);
+        float const y = height;
+        float const z = sinf(theta);
+
+        vertices[i].position.x = x*radius;
+        vertices[i].position.y = 0.0f;
+        vertices[i].position.z = z*radius;
+
+        vertices[i].normal.x = x;
+        vertices[i].normal.y = 0;
+        vertices[i].normal.z = z;
+
+        vertices[i].texcoords.u = tu;
+        vertices[i].texcoords.v = 1.0f;
+        
+
+        theta += PI * 2.0f / float(sides - 1);
+        tu += 1.0f / float(sides - 1);
+    }
+
+    theta = 0; tu = 0;
+    for (unsigned i = 0; i < sides; ++i)
+    {
+        float const x = cosf(theta);
+        float const y = height;
+        float const z = sinf(theta);
+
+        vertices[i + sides].position.x = x*radius;
+        vertices[i + sides].position.y = 0.0f;
+        vertices[i + sides].position.z = z*radius;
+
+        vertices[i + sides].normal.x = 0;
+        vertices[i + sides].normal.y = -1.0f;
+        vertices[i + sides].normal.z = 0;
+
+        vertices[i + sides].texcoords.u = tu;
+        vertices[i + sides].texcoords.v = 1.0f;
+
+        theta += PI * 2.0f / float(sides - 1);
+        tu += 1.0f / float(sides - 1);
+    }
+
+    vertices[sides * 2].position = vec3(0.0f);
+    vertices[sides * 2].normal = vec3(0.0f, -1.0f, 0.0f);
+    vertices[sides * 2].texcoords = vec2(0.0f, 0.0f);
+
+    vertices[sides * 2 + 1].position = vec3(0.0f, height, 0.0f);
+    vertices[sides * 2 + 1].normal = vec3(0.0f, 1.0f, 0.0f);
+    vertices[sides * 2 + 1].texcoords = vec2(0.0f, 0.0f);
+
+
+    std::vector<unsigned short>& indices = m_indices;
+    for (unsigned i = 0; i < sides; ++i)
+    {
+        indices.push_back(uint16_t((i + 1) % sides));
+        indices.push_back(uint16_t((i + 0) % sides));
+        indices.push_back(uint16_t(sides * 2 + 1));
+        
+        indices.push_back(uint16_t((sides + i + 1) % (sides * 2)));
+        indices.push_back(uint16_t(sides * 2));
+        indices.push_back(uint16_t((sides + i + 0) % (sides * 2)));
+    }
+}

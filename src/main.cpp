@@ -83,17 +83,23 @@ void Resize(int width, int height)
 
 double animtime;
 Mesh* g_stickmesh = NULL;
+bool firstTime = true;
 // Update each frame by time-step dt
 void Update(double dt)
 {
+    bool animating = false;
+    if (firstTime) {
+        animating = true;
+        firstTime = false;
+    }
     //angle += float(dt/10);
     const uint8_t* keys = SDL_GetKeyboardState(NULL);
     auto trans = g_entities[0].GetComponent<TransformComponent>();
     vec3 rot = trans->GetRotation();
     if (keys[SDL_SCANCODE_RIGHT])
-        rot[1] += (float)dt;
-    if (keys[SDL_SCANCODE_LEFT])
         rot[1] -= (float)dt;
+    if (keys[SDL_SCANCODE_LEFT])
+        rot[1] += (float)dt;
     trans->SetRotation(rot);
     mat3 t = EulerXYZ(rot);
     vec3 pos = trans->GetPosition();
@@ -105,10 +111,14 @@ void Update(double dt)
         pos = pos - dir*(float)dt*0.5f; */
 
     dir = dir.Cross(vec3(0, 1, 0));
-    if (keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_UP])
+    if (keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_UP]) {
         pos = pos + dir*(float)dt*0.5f; 
-    if (keys[SDL_SCANCODE_S] || keys[SDL_SCANCODE_DOWN])
+        animating = true;
+    }
+    if (keys[SDL_SCANCODE_S] || keys[SDL_SCANCODE_DOWN]) {
         pos = pos - dir*(float)dt*0.5f; 
+        animating = true;
+    }
     trans->SetPosition(pos);
 
     
@@ -131,7 +141,7 @@ void Update(double dt)
     for (size_t i=0; i<g_systems.size(); ++i)
         g_systems[i]->Update(dt);
 
-    if (g_stickmesh)
+    if (g_stickmesh && animating)
     {
         animtime += dt/4;
         if (animtime > g_stickmesh->GetAnimation()->duration)
@@ -170,38 +180,56 @@ int main()
     g_systems.push_back(&cameraSystem);
     MeshRenderSystem<DiffuseMaterial> diffuseRenderSystem(&g_renderer);
     MeshRenderSystem<SpecularMaterial> specularRenderSystem(&g_renderer);
+    MeshRenderSystem<ToonMaterial> toonRenderSystem(&g_renderer);
     g_systems.push_back(&diffuseRenderSystem);
     g_systems.push_back(&specularRenderSystem);
+    g_systems.push_back(&toonRenderSystem);
 
     // Create some entities
-    g_entities.resize(5);
+    g_entities.resize(10);
     
     // MeshComponent<MaterialType> is a component to store a mesh and a material
     typedef MeshComponent<DiffuseMaterial> DiffuseMeshComponent;  // DiffuseMaterial supports diffuse color, texture and shadow on surface
     typedef MeshComponent<SpecularMaterial> SpecularMeshComponent; // SpecularMaterial also supports a specular color and shininess
+    typedef MeshComponent<ToonMaterial> ToonMeshComponent;          // ToonMaterial only supports a color and performs toon shading
+
+//#define TOON_SHADING
     
     // Stickman entity, with mesh loaded from file
+#ifdef TOON_SHADING
+    auto msc = g_entities[0].AddComponent<ToonMeshComponent>(0.15f);
+#else
     auto msc = g_entities[0].AddComponent<SpecularMeshComponent>(0.15f);
-    g_stickmesh = &msc->mesh;
-    msc->mesh.LoadAnimatedFile("test1.dat");
     msc->material.depthBias = 0.05f;
     msc->material.shininess = 20.0f;
     msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
+#endif
+    g_stickmesh = &msc->mesh;
+    msc->mesh.LoadAnimatedFile("test1.dat");
     g_entities[0].AddComponent<TransformComponent>(vec3(0,0.07f,0), vec3(-90*3.1415f/180.0f,0,0));
     
     // Ground entity, with box mesh and green diffuse color
+#ifdef TOON_SHADING
+    auto mc = g_entities[1].AddComponent<ToonMeshComponent>();
+#else
     auto mc = g_entities[1].AddComponent<DiffuseMeshComponent>();
-    mc->mesh.LoadBox(3.0f, 0.05f, 3.0f);        // Larger than this ground size seems to give problems while shadow mapping; so use smaller pieces of ground entities instead of one large box
     mc->material.depthBias = 0.0f;
+#endif
     mc->material.diffuseColor = vec3(0.0f, 1.0f, 0.0f);
+    mc->mesh.LoadBox(3.0f, 0.05f, 3.0f);        // Larger than this ground size seems to give problems while shadow mapping; so use smaller pieces of ground entities instead of one large box
     g_entities[1].AddComponent<TransformComponent>(vec3(0,-1.05f,0));
     
     // Cube entity, with box mesh and texture loaded from file
+#ifdef TOON_SHADING
+    mc = g_entities[2].AddComponent<ToonMeshComponent>(1.0f);
+    mc->material.diffuseColor = vec3(0.0f, 0.0f, 1.0f);
+#else
     mc = g_entities[2].AddComponent<DiffuseMeshComponent>(1.0f);
-    mc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
-    //mc->mesh.LoadSphere(0.7f, 40, 40);
     mc->material.depthBias = 0.008f;
     mc->material.textureId = g_textureManager.AddTexture("grass_T.bmp");
+#endif
+    mc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
+    //mc->mesh.LoadCone(0.2f, 1.0f, 20);
     g_entities[2].AddComponent<TransformComponent>(vec3(2,-0.5f,-1));
 
     // A camera entity
@@ -210,15 +238,33 @@ int main()
     t->SetTransform(LookAt(vec3(-3, 2.0f, -3.0f), vec3(0,1,0), vec3(0,1,0)).AffineInverse());
  
     // Test transparent entity
+#ifdef TOON_SHADING
+    msc = g_entities[4].AddComponent<ToonMeshComponent>();
+#else
     msc = g_entities[4].AddComponent<SpecularMeshComponent>();
-    msc->mesh.LoadSphere(0.5f, 30, 30);
-    //msc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
     msc->material.depthBias = 0.0f;
-    msc->material.diffuseColor = vec4(1, 0, 0, 0.4f);
     msc->material.shininess = 20.0f;
     msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
+#endif
+    msc->material.diffuseColor = vec4(1, 0, 0, 0.4f);
+    msc->mesh.LoadSphere(0.5f, 30, 30);
+    //msc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
     msc->transparent = true;
     g_entities[4].AddComponent<TransformComponent>(vec3(-1.05f, 0, 0));
+
+
+
+#ifdef TOON_SHADING
+    mc = g_entities[5].AddComponent<ToonMeshComponent>(1.0f);
+#else
+    mc = g_entities[5].AddComponent<DiffuseMeshComponent>(1.0f);
+    mc->material.depthBias = 0.008f;
+#endif
+    mc->material.diffuseColor = vec3(0.0f, 0.0f, 1.0f);
+    mc->mesh.LoadCone(0.4f, 1.0f, 20);
+    g_entities[5].AddComponent<TransformComponent>(vec3(2,-1.0f,0));
+
+
 
 
     // Add entities to all systems and initialize the systems

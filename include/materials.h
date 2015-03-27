@@ -42,3 +42,17 @@ struct SpecularMaterial : public Material
         mesh.Draw(SpecularShaders::shaders, transparency);
     }
 };
+
+struct ToonMaterial : public Material
+{
+    ToonMaterial() : diffuseColor(vec4(1.0f, 1.0f, 1.0f, 1.0f)) {}
+    vec4 diffuseColor;
+    static const int ID = 2;
+
+    void DrawMesh(Mesh& mesh, bool transparency=false)
+    {
+        CellShaders::Uniforms &uniforms = CellShaders::uniforms;
+        uniforms.diffuseColor = diffuseColor;
+        mesh.Draw(CellShaders::shaders, transparency);
+    }
+};

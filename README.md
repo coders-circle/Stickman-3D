@@ -1,2 +1,10 @@
 # Stickman-3D
-An awesome game
+
+Computer Graphics Project in C++
+
+- 3D Rendering
+- Lighting
+- Shadows
+- Texturing
+- Transparency
+- Skin Animation

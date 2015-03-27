@@ -24,6 +24,8 @@ public:
     void LoadBox(float halfLength, float halfHeight, float halfWidth);
     // Load a sphere as the mesh
     void LoadSphere(float radius, uint16_t rings, uint16_t sectors);
+    // Load a cone as the mesh
+    void LoadCone(float radius, float height, unsigned sides);
     
     // Draw the mesh with the given shaders
     template<class ShadersClass>
