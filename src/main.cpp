@@ -4,7 +4,7 @@
 #include <TextureManager.h>
 #include <Mesh.h>
 
-#define TOON_SHADING
+//#define TOON_SHADING
 
 // Shaders to generate depth buffer in light space
 #include <shaders/depth_shaders3d.h>
@@ -248,10 +248,10 @@ int main()
     msc->material.specularColor = vec3(1.0f, 1.0f, 1.0f);
 #endif
     msc->material.diffuseColor = vec4(1, 0, 0, 0.4f);
-    msc->mesh.LoadSphere(0.5f, 30, 30);
+    msc->mesh.LoadSphere(0.7f, 30, 30);
     //msc->mesh.LoadBox(0.5f, 0.5f, 0.5f);
     msc->transparent = true;
-    g_entities[4].AddComponent<TransformComponent>(vec3(-1.05f, 0, 0));
+    g_entities[4].AddComponent<TransformComponent>(vec3(-1.05f, 0.0f, 0));
 
 
 
