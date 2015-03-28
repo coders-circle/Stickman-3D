@@ -27,14 +27,10 @@ public:
         vec3 dir = g_renderer.light.direction;
         float diffuseFactor = n.Dot(-dir);
         
-        if (diffuseFactor > 0.95f)
-            c = uniforms.diffuseColor;
-        else if (diffuseFactor > 0.5f)
-            c = uniforms.diffuseColor * 0.6f;
-        else if (diffuseFactor > 0.25f)
-            c = uniforms.diffuseColor * 0.4f;
+        if (diffuseFactor > 0.45f)
+            c = uniforms.diffuseColor * 0.7f;
         else
-            c = uniforms.diffuseColor * 0.2f;
+            c = uniforms.diffuseColor * 0.4f;
 
         c = c* g_renderer.light.diffuse;
         c = c+ g_renderer.light.ambient;
