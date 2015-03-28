@@ -47,8 +47,8 @@ void Renderer::MainLoop()
 
         SDL_LockSurface(m_screen);
 
-        std::string title = "FPS: " + std::to_string(m_timer.GetFPS());
-        SDL_SetWindowTitle(m_window, title.c_str());
+//        std::string title = "FPS: " + std::to_string(m_timer.GetFPS());
+//        SDL_SetWindowTitle(m_window, title.c_str());
         m_timer.Update([this](double dt){ 
             if (m_update)
                 m_update(dt); 
