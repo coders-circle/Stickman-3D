@@ -27,10 +27,10 @@ public:
         vec3 dir = g_renderer.light.direction;
         float diffuseFactor = n.Dot(-dir);
         
-        if (diffuseFactor > 0.45f)
+        if (diffuseFactor > 0.5f)
             c = uniforms.diffuseColor * 0.7f;
         else
-            c = uniforms.diffuseColor * 0.4f;
+            c = uniforms.diffuseColor * 0.6f;
 
         c = c* g_renderer.light.diffuse;
         c = c+ g_renderer.light.ambient;
@@ -39,7 +39,7 @@ public:
         c.y = Min(c.y, 1.0f);
         c.z = Min(c.z, 1.0f);
         
-        g_renderer.PutPixelUnsafe(point.pos[0], point.pos[1], c, uniforms.diffuseColor.a);     // Use the calculated color to plot the pixel
+        g_renderer.PutPixelUnsafe(point.pos[0], point.pos[1], c, 1.0f);     // Use the calculated color to plot the pixel
     }
 
     typedef Shaders<g_renderer, Vertex, 1, &VertexShader, &FragmentShader> ShadersType;

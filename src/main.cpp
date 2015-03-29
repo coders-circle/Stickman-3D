@@ -223,7 +223,7 @@ int main()
     // Cube entity, with box mesh and texture loaded from file
 #ifdef TOON_SHADING
     mc = g_entities[2].AddComponent<ToonMeshComponent>(1.0f);
-    mc->material.diffuseColor = vec3(0x33/255.0f, 0.0f, 0.0f);
+    mc->material.diffuseColor = vec3(0.7f, 1.0f, 0.0f);
 #else
     mc = g_entities[2].AddComponent<DiffuseMeshComponent>(1.0f);
     mc->material.depthBias = 0.008f;
